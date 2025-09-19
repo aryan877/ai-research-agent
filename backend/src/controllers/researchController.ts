@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ResearchRequestModel } from "../models/ResearchRequest";
 import { ResearchResultModel } from "../models/ResearchResult";
 import { WorkflowLogModel } from "../models/WorkflowLog";
+import { WorkflowLog } from "../types";
 import { addResearchJob } from "../utils/queue";
 
 export class ResearchController {
@@ -58,16 +59,57 @@ export class ResearchController {
       }
 
       const logs = await WorkflowLogModel.findByRequestId(id);
+      const aggregatedLogs = ResearchController.aggregateWorkflowLogs(logs);
       const result = await ResearchResultModel.findByRequestId(id);
 
       res.json({
         request,
-        logs,
+        logs: aggregatedLogs,
         result,
       });
     } catch (error) {
       console.error("Error fetching research details:", error);
       res.status(500).json({ error: "Internal server error" });
     }
+  }
+
+  private static aggregateWorkflowLogs(logs: WorkflowLog[]): WorkflowLog[] {
+    if (!logs.length) {
+      return logs;
+    }
+
+    const stepOrder = [
+      "Input Parsing",
+      "Data Gathering",
+      "AI Processing",
+      "Result Persistence",
+      "Error",
+    ];
+
+    const latestByStep = new Map<string, WorkflowLog>();
+
+    for (const log of logs) {
+      latestByStep.set(log.step, log);
+    }
+
+    const orderedLogs: WorkflowLog[] = [];
+
+    for (const step of stepOrder) {
+      const log = latestByStep.get(step);
+      if (log) {
+        orderedLogs.push(log);
+        latestByStep.delete(step);
+      }
+    }
+
+    if (latestByStep.size > 0) {
+      const remainingLogs = Array.from(latestByStep.values()).sort(
+        (a, b) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+      orderedLogs.push(...remainingLogs);
+    }
+
+    return orderedLogs;
   }
 }

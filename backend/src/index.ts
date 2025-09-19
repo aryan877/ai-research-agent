@@ -7,7 +7,7 @@ import aiRoutes from "./routes/ai";
 import metricsRoutes from "./routes/metrics";
 import researchRoutes from "./routes/research";
 import { db } from "./utils/database";
-import "./utils/queue";
+import { initializeQueueProcessors, researchQueue } from "./utils/queue";
 
 dotenv.config();
 
@@ -32,6 +32,14 @@ const startServer = async () => {
     // Test database connection
     await db.execute(`SELECT 1`);
     console.log("Database connection successful");
+
+    // Initialize job queue
+    console.log("Initializing job queue...");
+    await researchQueue.isReady();
+
+    // Initialize queue processors
+    initializeQueueProcessors();
+    console.log("Job queue initialized successfully");
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

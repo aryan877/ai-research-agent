@@ -14,10 +14,12 @@ A full-stack application that automates research workflows by accepting a topic 
 ## Quick Start
 
 ### Prerequisites
+
 - Docker & Docker Compose
 - Git
 
 ### Local Development
+
 1. Clone the repository
 2. Copy environment files:
    ```bash
@@ -55,6 +57,7 @@ docker-compose exec backend npm run db:migrate
 ## Research Workflow
 
 5-step automated process:
+
 1. Input Parsing - Validates and stores topic
 2. Data Gathering - Fetches articles from external APIs
 3. Processing - Extracts top 5 articles and keywords
@@ -64,9 +67,11 @@ docker-compose exec backend npm run db:migrate
 ## Deployment
 
 ### Docker (Full Stack)
+
 Both frontend and backend run in Docker containers:
 
 1. **VPS Setup**
+
    ```bash
    # Install Docker
    sudo apt update && sudo apt install docker.io docker-compose
@@ -93,6 +98,7 @@ Both frontend and backend run in Docker containers:
 ## Environment Variables
 
 **Backend (.env):**
+
 ```env
 NODE_ENV=development
 PORT=3001
@@ -102,6 +108,7 @@ NEWS_API_KEY=optional_news_api_key
 ```
 
 **Frontend (.env.local):**
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001/api
 ```

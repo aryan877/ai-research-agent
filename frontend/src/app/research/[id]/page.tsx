@@ -25,21 +25,68 @@ export default function ResearchDetailPage() {
   const id = params.id as string;
 
   useEffect(() => {
-    const fetchDetails = async () => {
-      if (!id) return;
+    if (!id) {
+      return;
+    }
+
+    const terminalStatuses = new Set(["completed", "failed"]);
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let isMounted = true;
+    let isFetching = false;
+
+    const fetchDetails = async (withLoading = false) => {
+      if (isFetching) {
+        return;
+      }
+
+      isFetching = true;
+
+      if (withLoading) {
+        setLoading(true);
+      }
 
       try {
         const data = await researchApi.getResearchById(id);
+
+        if (!isMounted) {
+          return;
+        }
+
         setDetails(data);
+        setError("");
+
+        if (terminalStatuses.has(data.request.status) && intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
       } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
         setError("Failed to load research details");
         console.error("Error fetching research details:", error);
       } finally {
-        setLoading(false);
+        if (withLoading && isMounted) {
+          setLoading(false);
+        }
+
+        isFetching = false;
       }
     };
 
-    fetchDetails();
+    fetchDetails(true);
+
+    intervalId = setInterval(() => {
+      fetchDetails();
+    }, 3000);
+
+    return () => {
+      isMounted = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
   }, [id]);
 
   const getStepIcon = (status: string) => {

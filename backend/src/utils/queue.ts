@@ -1,31 +1,49 @@
-import Bull from 'bull';
-import { processResearchJob, ResearchJobData } from '../jobs/researchJob';
+import Bull from "bull";
+import { processResearchJob, ResearchJobData } from "../jobs/researchJob";
 
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 
-export const researchQueue = new Bull<ResearchJobData>('research processing', REDIS_URL);
+export const researchQueue = new Bull<ResearchJobData>(
+  "research processing",
+  REDIS_URL
+);
 
-// Register handler for the named job so Bull can route "process-research" tasks correctly.
-researchQueue.process('process-research', processResearchJob);
+let processorsInitialized = false;
 
-researchQueue.on('completed', (job) => {
+// Initialize queue processors lazily so handlers register only once
+export const initializeQueueProcessors = () => {
+  if (processorsInitialized) {
+    return;
+  }
+
+  // Register handler for the named job so Bull can route "process-research" tasks correctly.
+  researchQueue.process("process-research", processResearchJob);
+  processorsInitialized = true;
+  console.log(
+    "Queue processors initialized: process-research handler registered"
+  );
+};
+
+researchQueue.on("completed", (job) => {
   console.log(`Job ${job.id} completed successfully`);
 });
 
-researchQueue.on('failed', (job, err) => {
+researchQueue.on("failed", (job, err) => {
   console.error(`Job ${job.id} failed:`, err.message);
 });
 
-export const addResearchJob = async (requestId: string, topic: string, provider?: 'openai' | 'anthropic') => {
+export const addResearchJob = async (
+  requestId: string,
+  topic: string,
+  provider?: "openai" | "anthropic"
+) => {
   return await researchQueue.add(
-    'process-research',
+    "process-research",
     { requestId, topic, provider },
     {
-      attempts: 3,
-      backoff: {
-        type: 'exponential',
-        delay: 2000,
-      },
+      attempts: 1,
+      removeOnComplete: true,
+      removeOnFail: false,
     }
   );
 };

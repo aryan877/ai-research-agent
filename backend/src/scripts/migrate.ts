@@ -17,9 +17,16 @@ const runMigrations = async () => {
   try {
     await migrate(db, { migrationsFolder: "./drizzle" });
     console.log("Migrations completed successfully");
-  } catch (error) {
-    console.error("Migration failed:", error);
-    process.exit(1);
+  } catch (error: any) {
+    if (
+      error.cause?.code === "42P07" ||
+      error.message?.includes("already exists")
+    ) {
+      console.log("Tables already exist, skipping migration");
+    } else {
+      console.error("Migration failed:", error);
+      process.exit(1);
+    }
   } finally {
     await pool.end();
   }
