@@ -8,6 +8,8 @@ import {
   Clock,
   ExternalLink,
   Loader2,
+  ShieldCheck,
+  Sparkles,
   Tag,
   XCircle,
 } from "lucide-react";
@@ -92,32 +94,57 @@ export default function ResearchDetailPage() {
   const getStepIcon = (status: string) => {
     switch (status) {
       case "started":
-        return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
+        return <Loader2 className="h-4 w-4 animate-spin text-blue-400" />;
       case "completed":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-green-400" />;
       case "failed":
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-red-400" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
+        return <Clock className="h-4 w-4 text-neutral-500" />;
     }
   };
 
-  const statusBadgeStyles: Record<
+  const statusThemes: Record<
     ResearchDetails["request"]["status"],
-    string
+    {
+      label: string;
+      badge: string;
+      description: string;
+    }
   > = {
-    completed: "bg-green-100 text-green-800",
-    processing: "bg-blue-100 text-blue-800",
-    failed: "bg-red-100 text-red-800",
-    pending: "bg-yellow-100 text-yellow-800",
+    completed: {
+      label: "Completed",
+      badge: "border-green-600 bg-green-500/10 text-green-400",
+      description:
+        "Brief delivered. Review insights, citations, and guardrails below.",
+    },
+    processing: {
+      label: "Processing",
+      badge: "border-blue-600 bg-blue-500/10 text-blue-400",
+      description:
+        "Agents are synthesizing sources, scoring credibility, and drafting findings.",
+    },
+    pending: {
+      label: "Pending",
+      badge: "border-yellow-600 bg-yellow-500/10 text-yellow-400",
+      description: "Queued for validation. We'll begin sourcing momentarily.",
+    },
+    failed: {
+      label: "Failed",
+      badge: "border-red-600 bg-red-500/10 text-red-400",
+      description:
+        "We hit a blocker. Inspect the workflow log for recovery options.",
+    },
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading research details...</p>
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-neutral-950 text-neutral-200">
+        <div className="relative z-10 rounded-xl border border-neutral-700 bg-neutral-900 px-10 py-12 text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-2 border-neutral-500 border-t-transparent" />
+          <p className="mt-4 text-sm text-neutral-400">
+            Loading research details...
+          </p>
         </div>
       </div>
     );
@@ -125,18 +152,20 @@ export default function ResearchDetailPage() {
 
   if (error || !details) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Error Loading Research
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-neutral-950 text-neutral-200">
+        <div className="relative z-10 rounded-xl border border-red-600 bg-neutral-900 px-10 py-12 text-center">
+          <XCircle className="mx-auto h-12 w-12 text-red-400" />
+          <h2 className="mt-6 text-xl font-semibold text-white">
+            Error loading research
           </h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <p className="mt-2 text-sm text-neutral-400">
+            {error || "We could not retrieve the requested brief."}
+          </p>
           <button
             onClick={() => router.back()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="mt-6 rounded-md bg-neutral-700 px-5 py-2 text-sm font-semibold text-white hover:bg-neutral-600"
           >
-            Go Back
+            Go back
           </button>
         </div>
       </div>
@@ -148,323 +177,453 @@ export default function ResearchDetailPage() {
   const summary = enhancedData?.researchSummary;
   const plan = enhancedData?.researchPlan;
   const metadata = enhancedData?.metadata;
-  const statusLabel =
-    request.status.charAt(0).toUpperCase() + request.status.slice(1);
+  const theme = statusThemes[request.status];
+  const providerLabel =
+    metadata?.provider ?? request.provider ?? "system default";
+  const createdAt = new Date(request.createdAt).toLocaleString();
+  const processedAt = metadata?.processingTimestamp
+    ? new Date(metadata.processingTimestamp).toLocaleString()
+    : null;
+  const metrics: Array<{ label: string; value: string; helper?: string }> = [];
+  if (summary) {
+    metrics.push({
+      label: "Confidence score",
+      value: `${summary.confidenceLevel}/10`,
+      helper: "Weighted trust & alignment",
+    });
+  }
+  if (metadata?.totalAnalyzed !== undefined) {
+    metrics.push({
+      label: "Articles processed",
+      value: metadata.totalAnalyzed.toString(),
+      helper: "Across trusted sources",
+    });
+  }
+  if (processedAt) {
+    metrics.push({
+      label: "Processed at",
+      value: processedAt,
+    });
+  }
+  if (plan?.researchDepth) {
+    metrics.push({
+      label: "Research depth",
+      value: plan.researchDepth,
+      helper: "Projected coverage",
+    });
+  }
+  const lastLog = logs.length ? logs[logs.length - 1] : null;
+  const timelineTone = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "border-green-600 bg-green-500/10 text-green-400";
+      case "failed":
+        return "border-red-600 bg-red-500/10 text-red-400";
+      case "started":
+        return "border-blue-600 bg-blue-500/10 text-blue-400";
+      default:
+        return "border-neutral-700 bg-neutral-800 text-neutral-400";
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="mb-6">
+    <div className="relative min-h-screen overflow-hidden bg-neutral-950 text-neutral-100">
+      <main className="relative z-10">
+        <div className="mx-auto max-w-7xl px-6 pb-20 pt-16">
           <Link
             href="/"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+            className="inline-flex items-center gap-2 text-sm font-medium text-neutral-400 transition hover:text-white"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Research List
+            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-700 bg-neutral-800">
+              <ArrowLeft className="h-4 w-4" />
+            </span>
+            Back to dashboard
           </Link>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <header className="relative mt-6 overflow-hidden rounded-xl border border-neutral-700 bg-neutral-900 p-10">
+            <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl space-y-5">
+                <div className="inline-flex items-center gap-2 rounded-full border border-neutral-700 bg-neutral-800 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-neutral-400">
+                  <Sparkles className="h-3.5 w-3.5 text-blue-400" />
+                  Research brief
+                </div>
+                <h1 className="text-3xl font-semibold text-white sm:text-4xl">
                   {request.topic}
                 </h1>
-                <p className="text-sm text-gray-600">
-                  Created: {new Date(request.createdAt).toLocaleString()}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    statusBadgeStyles[request.status]
-                  }`}
-                >
-                  {statusLabel}
-                </span>
-                {metadata?.provider && (
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                    Provider: {metadata.provider}
+                <p className="text-sm text-neutral-300">{theme.description}</p>
+                <div className="flex flex-wrap gap-3 text-xs text-neutral-400">
+                  <span className="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1">
+                    Created {createdAt}
                   </span>
+                  <span className="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1">
+                    Provider {providerLabel}
+                  </span>
+                  <span className="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1">
+                    Request ID {request.id.slice(0, 8)}
+                  </span>
+                </div>
+              </div>
+              <div className="w-full max-w-xs rounded-xl border border-neutral-700 bg-neutral-800 p-6">
+                <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
+                  Status
+                </p>
+                <span
+                  className={`mt-3 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${theme.badge}`}
+                >
+                  <span className="h-2 w-2 rounded-full bg-current" />
+                  {theme.label}
+                </span>
+                {lastLog && (
+                  <p className="mt-4 text-xs text-neutral-500">
+                    Last update {new Date(lastLog.timestamp).toLocaleString()}
+                  </p>
+                )}
+                {summary && (
+                  <div className="mt-4 rounded-xl border border-green-600 bg-green-500/10 px-4 py-3 text-sm text-green-400">
+                    Confidence {summary.confidenceLevel}/10
+                  </div>
                 )}
                 {metadata?.totalAnalyzed !== undefined && (
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    {metadata.totalAnalyzed} articles analyzed
-                  </span>
+                  <div className="mt-3 rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-3 text-xs text-neutral-400">
+                    {metadata.totalAnalyzed} sources processed
+                  </div>
                 )}
               </div>
             </div>
-          </div>
-        </div>
+          </header>
 
-        {(summary || metadata) && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-            {summary && (
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <p className="text-sm text-gray-500">Confidence Level</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {summary.confidenceLevel}/10
-                </p>
-              </div>
-            )}
-            {metadata?.totalAnalyzed !== undefined && (
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <p className="text-sm text-gray-500">Articles Processed</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {metadata.totalAnalyzed}
-                </p>
-              </div>
-            )}
-            {metadata?.processingTimestamp && (
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <p className="text-sm text-gray-500">Processed At</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {new Date(metadata.processingTimestamp).toLocaleString()}
-                </p>
-              </div>
-            )}
-            {plan && (
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <p className="text-sm text-gray-500">Research Depth</p>
-                <p className="text-sm font-semibold text-gray-900 capitalize">
-                  {plan.researchDepth}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+          {metrics.length > 0 && (
+            <section className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {metrics.map((metric) => (
+                <div
+                  key={metric.label}
+                  className="rounded-xl border border-neutral-700 bg-neutral-900 p-5"
+                >
+                  <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
+                    {metric.label}
+                  </p>
+                  <p className="mt-3 text-2xl font-semibold text-white">
+                    {metric.value}
+                  </p>
+                  {metric.helper && (
+                    <p className="mt-2 text-xs text-neutral-500">
+                      {metric.helper}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </section>
+          )}
 
-        <div className="grid xl:grid-cols-3 gap-8">
-          <div className="space-y-6 xl:col-span-2">
-            {summary && (
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">
-                  Executive Summary
-                </h2>
-                <p className="text-gray-700 leading-relaxed">
-                  {summary.executiveSummary}
-                </p>
-                {summary.sources.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-2">
-                      Top Sources
-                    </h3>
-                    <div className="space-y-2">
-                      {summary.sources.map((source, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between text-sm text-gray-600 bg-gray-50 rounded-md px-3 py-2"
-                        >
-                          <span className="font-medium text-gray-800">
-                            {source.title}
-                          </span>
-                          <div className="flex items-center gap-3 text-xs">
-                            <span className="text-blue-600">
-                              {source.relevance}
-                            </span>
-                            <span className="text-slate-500">
-                              {source.credibility}
+          <div className="mt-12 grid gap-10 xl:grid-cols-[1.2fr_0.85fr]">
+            <div className="space-y-8">
+              {summary && (
+                <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-8">
+                  <div className="flex items-center justify-between gap-4">
+                    <h2 className="text-2xl font-semibold text-white">
+                      Executive summary
+                    </h2>
+                    <span className="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.35em] text-neutral-500">
+                      {theme.label}
+                    </span>
+                  </div>
+                  <p className="mt-5 text-sm leading-relaxed text-neutral-300">
+                    {summary.executiveSummary}
+                  </p>
+                  {summary.sources.length > 0 && (
+                    <div className="mt-8 rounded-xl border border-neutral-700 bg-neutral-800 p-5">
+                      <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
+                        Top sources
+                      </p>
+                      <div className="mt-4 space-y-3">
+                        {summary.sources.map((source, index) => (
+                          <div
+                            key={`${source.title}-${index}`}
+                            className="flex flex-col gap-2 rounded-xl border border-neutral-700 bg-neutral-900 p-4 sm:flex-row sm:items-center sm:justify-between"
+                          >
+                            <div>
+                              <p className="text-sm font-semibold text-white">
+                                {source.title}
+                              </p>
+                              <div className="mt-1 flex flex-wrap gap-2 text-xs text-neutral-500">
+                                <span className="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1">
+                                  Relevance {source.relevance}
+                                </span>
+                                <span className="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1">
+                                  Credibility {source.credibility}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {summary?.keyFindings?.length ? (
+                <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-8">
+                  <h2 className="text-xl font-semibold text-white">
+                    Key findings
+                  </h2>
+                  <div className="mt-4 space-y-3">
+                    {summary.keyFindings.map((finding, index) => (
+                      <div
+                        key={`finding-${index}`}
+                        className="flex gap-4 rounded-xl border border-neutral-700 bg-neutral-800 p-4"
+                      >
+                        <span className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-blue-400" />
+                        <p className="text-sm text-neutral-300">{finding}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {summary?.recommendations?.length ? (
+                <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-8">
+                  <h2 className="text-xl font-semibold text-white">
+                    Recommendations
+                  </h2>
+                  <div className="mt-4 space-y-3">
+                    {summary.recommendations.map((recommendation, index) => (
+                      <div
+                        key={`recommendation-${index}`}
+                        className="flex gap-4 rounded-xl border border-neutral-700 bg-neutral-800 p-4"
+                      >
+                        <span className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-green-400" />
+                        <p className="text-sm text-neutral-300">
+                          {recommendation}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {result?.articles?.length ? (
+                <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-8">
+                  <h2 className="text-xl font-semibold text-white">
+                    Research articles
+                  </h2>
+                  <div className="mt-6 space-y-6">
+                    {result.articles.map((article, index) => (
+                      <div
+                        key={`${article.url}-${index}`}
+                        className="rounded-xl border border-neutral-700 bg-neutral-800 p-6 transition hover:border-neutral-600 hover:bg-neutral-700"
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold text-white">
+                              {article.title}
+                            </h3>
+                            <span className="mt-2 inline-flex items-center rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1 text-xs text-neutral-400">
+                              {article.source}
                             </span>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {summary?.keyFindings?.length ? (
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Key Findings</h2>
-                <ul className="space-y-3 text-gray-700">
-                  {summary.keyFindings.map((finding, index) => (
-                    <li key={index} className="flex gap-3">
-                      <span className="mt-1 h-2 w-2 rounded-full bg-blue-500"></span>
-                      <span>{finding}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {summary?.recommendations?.length ? (
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Recommendations</h2>
-                <ul className="space-y-3 text-gray-700">
-                  {summary.recommendations.map((recommendation, index) => (
-                    <li key={index} className="flex gap-3">
-                      <span className="mt-1 h-2 w-2 rounded-full bg-green-500"></span>
-                      <span>{recommendation}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {result?.keywords?.length ? (
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h2 className="text-xl font-semibold mb-4 flex items-center">
-                  <Tag className="h-5 w-5 mr-2" />
-                  Top Keywords
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {result.keywords.map((keyword, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                    >
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {result?.articles?.length ? (
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">
-                  Research Articles
-                </h2>
-                <div className="space-y-4">
-                  {result.articles.map((article, index) => (
-                    <div
-                      key={index}
-                      className="border border-gray-200 rounded-lg p-4 space-y-3"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">
-                            {article.title}
-                          </h3>
-                          <span className="inline-flex items-center text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded mt-2">
-                            {article.source}
-                          </span>
-                        </div>
-                        <a
-                          href={article.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          Read More
-                          <ExternalLink className="h-3 w-3 ml-1" />
-                        </a>
-                      </div>
-                      <p className="text-gray-700 text-sm leading-relaxed">
-                        {article.summary}
-                      </p>
-                      {(typeof article.relevanceScore === "number" ||
-                        typeof article.credibilityScore === "number") && (
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
-                          {typeof article.relevanceScore === "number" && (
-                            <span className="px-2 py-1 rounded-full bg-blue-50 text-blue-700 font-medium">
-                              Relevance {article.relevanceScore}/10
-                            </span>
-                          )}
-                          {typeof article.credibilityScore === "number" && (
-                            <span className="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 font-medium">
-                              Credibility {article.credibilityScore}/10
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      {article.keyInsights?.length ? (
-                        <div className="border-t border-gray-100 pt-3">
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                            Key Insights
-                          </p>
-                          <ul className="space-y-2 text-sm text-gray-700 list-disc list-inside">
-                            {article.keyInsights.map(
-                              (insight, insightIndex) => (
-                                <li key={insightIndex}>{insight}</li>
-                              )
-                            )}
-                          </ul>
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="space-y-6">
-            {plan && (
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Research Plan</h2>
-                <div className="space-y-4 text-gray-700">
-                  {plan.primaryQuestions.length ? (
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-2">
-                        Primary Questions
-                      </h3>
-                      <ul className="space-y-2 list-disc list-inside text-sm">
-                        {plan.primaryQuestions.map((question, index) => (
-                          <li key={index}>{question}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-                  {plan.searchTerms.length ? (
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-2">
-                        Search Terms
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {plan.searchTerms.map((term, index) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium"
+                          <a
+                            href={article.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-sm font-semibold text-blue-400 hover:text-blue-300"
                           >
-                            {term}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-                  {plan.expectedFindings.length ? (
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-2">
-                        Expected Findings
-                      </h3>
-                      <ul className="space-y-2 list-disc list-inside text-sm">
-                        {plan.expectedFindings.map((finding, index) => (
-                          <li key={index}>{finding}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            )}
-
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h2 className="text-xl font-semibold mb-4">Workflow Progress</h2>
-              <div className="space-y-4">
-                {logs.map((log) => (
-                  <div key={log.id} className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 mt-1">
-                      {getStepIcon(log.status)}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{log.step}</h3>
-                      {log.message && (
-                        <p className="text-sm text-gray-600 mt-1">
-                          {log.message}
+                            View article
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </div>
+                        <p className="mt-4 text-sm leading-relaxed text-neutral-300">
+                          {article.summary}
                         </p>
-                      )}
-                      <p className="text-xs text-gray-500 mt-1">
-                        {new Date(log.timestamp).toLocaleString()}
+                        {(typeof article.relevanceScore === "number" ||
+                          typeof article.credibilityScore === "number") && (
+                          <div className="mt-4 flex flex-wrap gap-3 text-xs text-neutral-400">
+                            {typeof article.relevanceScore === "number" && (
+                              <span className="rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1">
+                                Relevance {article.relevanceScore}/10
+                              </span>
+                            )}
+                            {typeof article.credibilityScore === "number" && (
+                              <span className="rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1">
+                                Credibility {article.credibilityScore}/10
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {article.keyInsights?.length ? (
+                          <div className="mt-4 rounded-xl border border-neutral-700 bg-neutral-900 p-4">
+                            <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
+                              Key insights
+                            </p>
+                            <ul className="mt-3 space-y-2 text-sm text-neutral-300 list-disc list-inside">
+                              {article.keyInsights.map(
+                                (insight, insightIndex) => (
+                                  <li key={insightIndex}>{insight}</li>
+                                )
+                              )}
+                            </ul>
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <aside className="space-y-8">
+              {plan && (
+                <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-6">
+                  <h2 className="text-xl font-semibold text-white">
+                    Research plan
+                  </h2>
+                  <div className="mt-5 space-y-5 text-sm text-neutral-300">
+                    {plan.primaryQuestions.length ? (
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
+                          Primary questions
+                        </p>
+                        <ul className="mt-2 space-y-2 rounded-xl border border-neutral-700 bg-neutral-800 p-4">
+                          {plan.primaryQuestions.map((question, index) => (
+                            <li key={`question-${index}`}>{question}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                    {plan.searchTerms.length ? (
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
+                          Search terms
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {plan.searchTerms.map((term, index) => (
+                            <span
+                              key={`term-${index}`}
+                              className="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1 text-xs text-neutral-400"
+                            >
+                              {term}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    {plan.expectedFindings.length ? (
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
+                          Expected findings
+                        </p>
+                        <ul className="mt-2 space-y-2 rounded-xl border border-neutral-700 bg-neutral-800 p-4">
+                          {plan.expectedFindings.map((finding, index) => (
+                            <li key={`expected-${index}`}>{finding}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              )}
+
+              {result?.keywords?.length ? (
+                <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-6">
+                  <h2 className="flex items-center gap-2 text-xl font-semibold text-white">
+                    <Tag className="h-5 w-5 text-blue-400" />
+                    Top keywords
+                  </h2>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {result.keywords.map((keyword, index) => (
+                      <span
+                        key={`keyword-${index}`}
+                        className="rounded-full border border-neutral-700 bg-neutral-800 px-4 py-1.5 text-xs font-medium text-neutral-300"
+                      >
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {(metadata?.totalAnalyzed !== undefined ||
+                processedAt ||
+                summary) && (
+                <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-400">
+                      <ShieldCheck className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
+                        Data snapshot
                       </p>
+                      <h3 className="text-lg font-semibold text-white">
+                        Quality guardrails
+                      </h3>
                     </div>
                   </div>
-                ))}
+                  <ul className="mt-4 space-y-3 text-sm text-neutral-300">
+                    {metadata?.totalAnalyzed !== undefined && (
+                      <li className="flex gap-3">
+                        <span className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-green-400" />
+                        <span>
+                          {metadata.totalAnalyzed} distinct articles evaluated
+                        </span>
+                      </li>
+                    )}
+                    {summary && (
+                      <li className="flex gap-3">
+                        <span className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-green-400" />
+                        <span>
+                          Confidence scoring: {summary.confidenceLevel}/10
+                        </span>
+                      </li>
+                    )}
+                    {processedAt && (
+                      <li className="flex gap-3">
+                        <span className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-green-400" />
+                        <span>Processing completed {processedAt}</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+
+              <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-6">
+                <h2 className="text-xl font-semibold text-white">
+                  Workflow timeline
+                </h2>
+                <div className="mt-6 space-y-6">
+                  {logs.map((log, index) => (
+                    <div key={log.id} className="relative pl-8">
+                      {index < logs.length - 1 && (
+                        <span className="absolute left-[11px] top-6 h-full w-0.5 bg-neutral-700" />
+                      )}
+                      <span
+                        className={`absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full border ${timelineTone(
+                          log.status
+                        )}`}
+                      >
+                        {getStepIcon(log.status)}
+                      </span>
+                      <div>
+                        <p className="text-sm font-semibold text-white">
+                          {log.step}
+                        </p>
+                        {log.message && (
+                          <p className="mt-1 text-xs text-neutral-400">
+                            {log.message}
+                          </p>
+                        )}
+                        <p className="mt-2 text-[11px] uppercase tracking-[0.35em] text-neutral-500">
+                          {new Date(log.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            </aside>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

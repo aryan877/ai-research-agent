@@ -55,5 +55,5 @@ User Input → Frontend → Backend API → Database → Job Queue → Backgroun
 ## Development
 
 - **Local**: Docker Compose for full stack
-- **Testing**: TypeScript, ESLint, Jest
+- **Quality**: TypeScript, ESLint
 - **Deployment**: Docker containers

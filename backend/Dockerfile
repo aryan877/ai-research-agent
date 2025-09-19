@@ -15,7 +15,7 @@ COPY . .
 RUN npm run build
 
 # Keep ts-node for migrations, remove other dev dependencies
-RUN npm uninstall nodemon jest @types/jest @types/supertest supertest
+RUN npm uninstall nodemon
 
 EXPOSE 3001
 

@@ -31,7 +31,7 @@ Built a complete AI Research Agent application that accepts research topics, run
 - **Database**: PostgreSQL with Redis for job queues
 - **Development**: Docker Compose for local full-stack development
 - **Deployment**: Configurations for Vercel, Render, Fly.io, Railway
-- **CI/CD**: GitHub Actions pipeline for automated testing and deployment
+- **CI/CD**: GitHub Actions pipeline for automated deployment
 
 ## Key Features Delivered
 
@@ -95,7 +95,7 @@ ai-research-agent/
 - **Database**: PostgreSQL with connection pooling
 - **Job Queue**: Bull.js with Redis backend
 - **External APIs**: Axios for HTTP requests
-- **Testing**: Jest with TypeScript support
+- **Development**: TypeScript with strict configuration
 
 ### Frontend Stack
 
@@ -137,10 +137,8 @@ docker-compose up --build
 - **Database**: Managed PostgreSQL and Redis services
 - **Domain**: Custom domains with SSL/HTTPS support
 
-## Testing & Quality Assurance
+## Quality Assurance
 
-- **Unit Tests**: Jest configuration with TypeScript
-- **API Testing**: Endpoint validation and error handling
 - **Type Safety**: Strict TypeScript configuration
 - **Code Quality**: ESLint and Prettier integration
 - **Security**: Input validation and SQL injection prevention

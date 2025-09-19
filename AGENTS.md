@@ -78,7 +78,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3001/api
 ## Development Checklist
 
 - [ ] TypeScript compiles without errors
-- [ ] Tests pass (`npm test`)
+- [ ] Application builds successfully (`npm run build`)
 - [ ] ESLint passes
 - [ ] Docker builds successfully
 - [ ] API endpoints work correctly
