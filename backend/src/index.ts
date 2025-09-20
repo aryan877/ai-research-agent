@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
-import metricsRoutes from "./routes/metrics";
 import researchRoutes from "./routes/research";
 import { db } from "./utils/database";
 import { initializeQueueProcessors, researchQueue } from "./utils/queue";
@@ -28,7 +27,6 @@ app.use(morgan("combined"));
 app.use(express.json());
 
 app.use("/api/research", researchRoutes);
-app.use("/api/metrics", metricsRoutes);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });

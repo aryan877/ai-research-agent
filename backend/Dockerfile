@@ -14,8 +14,8 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Keep ts-node for migrations, remove other dev dependencies
-RUN npm uninstall nodemon
+# Keep dependencies needed for runtime and migrations
+RUN npm prune --production=false
 
 EXPOSE 3001
 

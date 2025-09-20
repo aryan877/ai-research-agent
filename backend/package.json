@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon src/index.ts",
+    "dev": "node --require ./tracing.js node_modules/.bin/nodemon",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node --require ./tracing.js dist/index.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "ts-node src/scripts/migrate.ts",
     "db:push": "drizzle-kit push",
@@ -24,6 +24,9 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.17",
     "@ai-sdk/openai": "^2.0.32",
+    "@opentelemetry/auto-instrumentations-node": "^0.64.1",
+    "@opentelemetry/sdk-metrics": "^2.1.0",
+    "@opentelemetry/sdk-node": "^0.205.0",
     "ai": "^5.0.46",
     "axios": "^1.12.2",
     "bull": "^4.16.5",

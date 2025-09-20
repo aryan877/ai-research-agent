@@ -11,6 +11,7 @@ A full-stack application that automates research workflows by accepting a topic 
 - Responsive UI with Next.js and Tailwind CSS
 - Production-ready Docker containerization
 - CI/CD pipeline with GitHub Actions
+- **OpenTelemetry observability** - Full telemetry for AI operations, HTTP requests, and system metrics
 
 ## Architecture
 
@@ -169,6 +170,7 @@ Auto-deployment on push to main branch.
 - **Backend**: Node.js, TypeScript, Express.js, PostgreSQL, Redis, Bull.js, Drizzle ORM
 - **Frontend**: Next.js 15, TypeScript, Tailwind CSS, React 19
 - **Infrastructure**: Docker, Caddy, GitHub Actions
+- **Observability**: OpenTelemetry with AI SDK telemetry, automatic instrumentation
 - **Deployment**: Vercel (Frontend), VPS (Backend), Cloudflare (DNS)
 
 ## Environment Variables
@@ -202,6 +204,42 @@ ANTHROPIC_API_KEY=your_anthropic_key
 NEXT_PUBLIC_API_URL=https://api.deepresearching.xyz/api
 ```
 
+## Observability & Monitoring
+
+### OpenTelemetry Integration
+
+The application includes comprehensive observability through OpenTelemetry:
+
+**Automatic Instrumentation:**
+- HTTP requests and Express middleware
+- PostgreSQL database operations
+- Redis connections
+- Node.js system metrics (memory, event loop, V8 heap)
+
+**AI SDK Telemetry:**
+- Native OpenTelemetry spans with `experimental_telemetry: { isEnabled: true }`
+- Automatic token usage, cost, and duration tracking
+- Built-in model and provider identification
+- Custom metadata support for request correlation
+
+**Viewing Telemetry Data:**
+```bash
+# All logs including telemetry
+docker compose logs -f backend
+
+# AI SDK telemetry spans only
+docker compose logs backend | grep "ai\."
+
+# OpenTelemetry traces and spans
+docker compose logs backend | grep -E "(traceId|spanId)"
+```
+
+**Telemetry Configuration:**
+- Service: `ai-research-backend`
+- Exporters: Console (development), extensible for production
+- Metrics export interval: 30 seconds
+- Location: `backend/tracing.js`
+
 ## Commands
 
 ```bash
@@ -216,6 +254,9 @@ docker compose exec backend npm run db:migrate
 
 # View logs
 docker compose logs -f backend
+
+# View AI SDK telemetry data
+docker compose logs backend | grep "ai\."
 
 # Stop services
 docker compose down

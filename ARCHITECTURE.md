@@ -57,6 +57,22 @@ graph TD
 | `workflow_logs` | Audit trail for each job stage | `id`, `request_id`, `step`, `status`, `message`, `timestamp` |
 
 ## Observability & Metrics
+
+### OpenTelemetry Integration
+- **Automatic instrumentation** via `@opentelemetry/auto-instrumentations-node` captures HTTP requests, database operations, and system metrics.
+- **AI SDK built-in telemetry** with `experimental_telemetry: { isEnabled: true }` automatically creates spans for all AI operations.
+- **Zero redundancy**: Uses AI SDK's native OpenTelemetry integration instead of custom metrics.
+- **Console exporters** output all telemetry data to Docker logs for development monitoring.
+- **Service identification**: traces are tagged with service name `ai-research-backend` and version.
+
+### Telemetry Data Captured
+- **HTTP traces**: API request/response cycles, middleware execution, routing
+- **Database operations**: PostgreSQL connection pools, query performance, connection states
+- **AI operations**: Native AI SDK spans with token usage, costs, duration, model details, and custom metadata
+- **System metrics**: Node.js memory usage, event loop performance, V8 heap statistics
+- **Custom metadata**: Request IDs, topics, providers, and operation-specific context
+
+### Application Metrics
 - `WorkflowLogModel` captures each pipeline phase (Input Parsing, Data Gathering, AI Processing, Result Persistence, Error).
 - `metrics` routes expose request-level and aggregate metrics derived from persisted data.
 - Structured logging (via `morgan` and targeted `console` logs) assists during local debugging.

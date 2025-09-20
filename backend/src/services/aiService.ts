@@ -1,11 +1,6 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { openai } from "@ai-sdk/openai";
-import {
-  generateObject,
-  generateText,
-  streamObject,
-  type LanguageModelUsage,
-} from "ai";
+import { generateObject, generateText } from "ai";
 import { z } from "zod";
 import {
   Article,
@@ -13,7 +8,6 @@ import {
   ResearchPlan as ResearchPlanType,
   ResearchSummary,
 } from "../types";
-import { MetricsService, TokenUsage } from "./metricsService";
 
 // Schemas for structured AI outputs
 const boundedString = (limit: number) =>
@@ -61,13 +55,6 @@ const ResearchSummarySchema = z.object({
 
 type Provider = "openai" | "anthropic";
 
-const toTokenUsage = (usage: LanguageModelUsage): TokenUsage => ({
-  promptTokens: usage.inputTokens ?? 0,
-  completionTokens: usage.outputTokens ?? 0,
-  totalTokens:
-    usage.totalTokens ?? (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0),
-});
-
 export class AIService {
   private static getModel(provider: Provider = "anthropic") {
     switch (provider) {
@@ -80,17 +67,6 @@ export class AIService {
     }
   }
 
-  private static getModelName(provider: Provider = "anthropic"): string {
-    switch (provider) {
-      case "openai":
-        return "gpt-4o";
-      case "anthropic":
-        return "claude-3-5-sonnet-20241022";
-      default:
-        return "claude-3-5-sonnet-20241022";
-    }
-  }
-
   /**
    * Generate a comprehensive research plan for a given topic
    */
@@ -99,8 +75,6 @@ export class AIService {
     provider: Provider = "anthropic",
     requestId?: string
   ): Promise<ResearchPlanType> {
-    const startTime = Date.now();
-
     const result = await generateObject({
       model: this.getModel(provider),
       schema: ResearchPlanSchema,
@@ -116,29 +90,9 @@ export class AIService {
       experimental_telemetry: {
         isEnabled: true,
         functionId: "generate-research-plan",
-        metadata: { topic, ...(requestId ? { requestId } : {}) },
+        metadata: { topic, provider, ...(requestId ? { requestId } : {}) },
       },
     });
-
-    if (result.usage && requestId) {
-      const usageMetrics = toTokenUsage(result.usage);
-      const duration = Date.now() - startTime;
-      const cost = MetricsService.calculateCost(
-        usageMetrics,
-        AIService.getModelName(provider)
-      );
-
-      MetricsService.recordMetrics({
-        requestId,
-        provider,
-        model: AIService.getModelName(provider),
-        operation: "generate-research-plan",
-        tokenUsage: usageMetrics,
-        cost,
-        duration,
-        metadata: { topic },
-      });
-    }
 
     const plan = result.object as ResearchPlanType;
 
@@ -165,10 +119,6 @@ export class AIService {
     provider: Provider = "anthropic",
     requestId?: string
   ): Promise<Array<{ article: Article; analysis: ArticleAnalysis }>> {
-    const startTime = Date.now();
-    let totalTokens = 0;
-    let totalCost = 0;
-
     const analyses = await Promise.all(
       articles.map(async (article, index) => {
         const result = await generateObject({
@@ -196,32 +146,12 @@ Be thorough and critical in your analysis.`,
             functionId: "analyze-article",
             metadata: {
               topic,
+              provider,
               articleIndex: index,
               ...(requestId ? { requestId } : {}),
             },
           },
         });
-
-        if (result.usage && requestId) {
-          const usageMetrics = toTokenUsage(result.usage);
-          const cost = MetricsService.calculateCost(
-            usageMetrics,
-            AIService.getModelName(provider)
-          );
-          totalTokens += usageMetrics.totalTokens;
-          totalCost += cost;
-
-          MetricsService.recordMetrics({
-            requestId,
-            provider,
-            model: AIService.getModelName(provider),
-            operation: "analyze-article",
-            tokenUsage: usageMetrics,
-            cost,
-            duration: Date.now() - startTime,
-            metadata: { topic, articleTitle: article.title },
-          });
-        }
 
         return {
           article,
@@ -229,21 +159,6 @@ Be thorough and critical in your analysis.`,
         };
       })
     );
-
-    // Record aggregate metrics
-    if (requestId) {
-      const duration = Date.now() - startTime;
-      MetricsService.recordMetrics({
-        requestId,
-        provider,
-        model: AIService.getModelName(provider),
-        operation: "analyze-articles-batch",
-        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens },
-        cost: totalCost,
-        duration,
-        metadata: { topic, articlesCount: articles.length },
-      });
-    }
 
     // Sort by relevance score and return top articles with analysis
     return analyses.sort(
@@ -260,7 +175,6 @@ Be thorough and critical in your analysis.`,
     provider: Provider = "anthropic",
     requestId?: string
   ) {
-    const startTime = Date.now();
     const articlesText = articles
       .map((article) => `${article.title}: ${article.summary}`)
       .join("\n\n");
@@ -283,31 +197,12 @@ Return only the keywords as a comma-separated list, no explanations.`,
         functionId: "generate-keywords",
         metadata: {
           topic,
+          provider,
           articlesCount: articles.length,
           ...(requestId ? { requestId } : {}),
         },
       },
     });
-
-    if (result.usage && requestId) {
-      const usageMetrics = toTokenUsage(result.usage);
-      const duration = Date.now() - startTime;
-      const cost = MetricsService.calculateCost(
-        usageMetrics,
-        AIService.getModelName(provider)
-      );
-
-      MetricsService.recordMetrics({
-        requestId,
-        provider,
-        model: AIService.getModelName(provider),
-        operation: "generate-keywords",
-        tokenUsage: usageMetrics,
-        cost,
-        duration,
-        metadata: { topic, articlesCount: articles.length },
-      });
-    }
 
     return result.text
       .split(",")
@@ -325,7 +220,6 @@ Return only the keywords as a comma-separated list, no explanations.`,
     provider: Provider = "anthropic",
     requestId?: string
   ): Promise<ResearchSummary> {
-    const startTime = Date.now();
     const topArticles = analyzedArticles.slice(0, 5);
     const sourceMaterial = topArticles
       .map(
@@ -359,31 +253,12 @@ Be analytical, well-structured, and evidence-based in your summary.`,
         functionId: "generate-research-summary",
         metadata: {
           topic,
+          provider,
           sourcesCount: topArticles.length,
           ...(requestId ? { requestId } : {}),
         },
       },
     });
-
-    if (result.usage && requestId) {
-      const usageMetrics = toTokenUsage(result.usage);
-      const duration = Date.now() - startTime;
-      const cost = MetricsService.calculateCost(
-        usageMetrics,
-        AIService.getModelName(provider)
-      );
-
-      MetricsService.recordMetrics({
-        requestId,
-        provider,
-        model: AIService.getModelName(provider),
-        operation: "generate-research-summary",
-        tokenUsage: usageMetrics,
-        cost,
-        duration,
-        metadata: { topic, sourcesCount: topArticles.length },
-      });
-    }
 
     const summary = result.object as ResearchSummary;
 
@@ -412,20 +287,6 @@ Be analytical, well-structured, and evidence-based in your summary.`,
         };
       }),
     };
-  }
-
-  /**
-   * Stream research analysis in real-time (useful for UI updates)
-   */
-  static async streamResearchAnalysis(
-    topic: string,
-    provider: Provider = "anthropic"
-  ) {
-    return streamObject({
-      model: this.getModel(provider),
-      schema: ResearchPlanSchema,
-      prompt: `Create a detailed research plan for: "${topic}". Stream your analysis as you think through the research approach.`,
-    });
   }
 
   /**
