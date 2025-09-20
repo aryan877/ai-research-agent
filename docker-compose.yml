@@ -59,13 +59,13 @@ services:
       - "3000:3000"
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
+      NODE_ENV: development
     depends_on:
       backend:
         condition: service_started
     volumes:
       - ./frontend:/app
       - /app/node_modules
-      - /app/.next
     restart: unless-stopped
     networks:
       - app-network

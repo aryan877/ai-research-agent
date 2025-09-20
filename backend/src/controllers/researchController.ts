@@ -31,14 +31,15 @@ export class ResearchController {
           .json({ error: 'Provider must be either "openai" or "anthropic"' });
       }
 
-      const request = await ResearchRequestModel.create(topic.trim(), userId);
+      const request = await ResearchRequestModel.create(
+        topic.trim(),
+        userId,
+        provider
+      );
 
       await addResearchJob(request.id, request.topic, provider);
 
-      res.status(201).json({
-        ...request,
-        provider,
-      });
+      res.status(201).json(request);
     } catch (error) {
       console.error("Error submitting research:", error);
       res.status(500).json({ error: "Internal server error" });

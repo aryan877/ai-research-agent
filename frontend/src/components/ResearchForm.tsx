@@ -1,30 +1,57 @@
 "use client";
 
 import { researchApi } from "@/lib/api";
-import { Loader2, Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+const MODEL_OPTIONS: Array<{
+  value: "openai" | "anthropic";
+  title: string;
+  subtitle: string;
+}> = [
+  {
+    value: "anthropic",
+    title: "Claude (Anthropic)",
+    subtitle: "Nuanced reasoning with strong guardrails",
+  },
+  {
+    value: "openai",
+    title: "GPT-4o (OpenAI)",
+    subtitle: "Fast multimodal responses with broad knowledge",
+  },
+];
 
 interface ResearchFormProps {
   onSubmit: () => void;
   userId: string | null;
   className?: string;
+  initialTopic?: string;
 }
 
 export default function ResearchForm({
   onSubmit,
   userId,
   className,
+  initialTopic = "",
 }: ResearchFormProps) {
   const [topic, setTopic] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [provider, setProvider] = useState<"openai" | "anthropic">("anthropic");
+
+  useEffect(() => {
+    if (initialTopic) {
+      setTopic(initialTopic);
+    }
+  }, [initialTopic]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const trimmedTopic = topic.trim();
     if (!trimmedTopic) return;
     if (!userId) {
-      setError("User session is still initializing. Please try again in a moment.");
+      setError(
+        "User session is still initializing. Please try again in a moment."
+      );
       return;
     }
 
@@ -32,7 +59,7 @@ export default function ResearchForm({
     setError("");
 
     try {
-      await researchApi.submitResearch(trimmedTopic, userId);
+      await researchApi.submitResearch(trimmedTopic, userId, provider);
       setTopic("");
       onSubmit();
     } catch (submissionError) {
@@ -45,8 +72,8 @@ export default function ResearchForm({
 
   return (
     <div className={`w-full ${className ?? ""}`}>
-      <div className="rounded-lg border border-neutral-700 bg-neutral-900 p-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="rounded-2xl bg-neutral-900/90 p-8 shadow-xl">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label
               className="block text-sm font-medium text-white"
@@ -54,27 +81,67 @@ export default function ResearchForm({
             >
               Research Topic
             </label>
-            <div className="relative mt-2">
+            <div className="mt-2">
               <input
                 id="research-topic"
                 type="text"
                 value={topic}
                 onChange={(event) => setTopic(event.target.value)}
                 placeholder="Enter your research topic..."
-                className="w-full rounded-md border border-neutral-600 bg-neutral-800 px-3 py-2 pr-12 text-sm text-white placeholder-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg bg-neutral-800/80 px-4 py-3 text-sm text-white placeholder-neutral-500 shadow-inner transition focus:outline-none focus:ring-2 focus:ring-blue-500/70"
                 disabled={isSubmitting || !userId}
               />
-              <button
-                type="submit"
-                disabled={!topic.trim() || !userId || isSubmitting}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-blue-600 p-2 text-white hover:bg-blue-700 disabled:bg-neutral-600"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Search className="h-4 w-4" />
-                )}
-              </button>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-medium text-white">Model</p>
+            <p className="mt-1 text-xs text-neutral-400">
+              Choose which provider will run this brief.
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {MODEL_OPTIONS.map((option) => {
+                const isActive = provider === option.value;
+                return (
+                  <label
+                    key={option.value}
+                    className={`relative cursor-pointer rounded-2xl border-2 px-4 py-4 transition-all duration-200 ${
+                      isActive
+                        ? "border-blue-400/60 bg-blue-500/10 shadow-lg shadow-blue-500/20"
+                        : "border-neutral-700/50 bg-neutral-800/80 hover:border-neutral-600/60 hover:bg-neutral-800"
+                    } ${isSubmitting || !userId ? "cursor-not-allowed opacity-60" : ""}`}
+                  >
+                    <input
+                      type="radio"
+                      name="provider"
+                      value={option.value}
+                      checked={isActive}
+                      onChange={(e) => setProvider(e.target.value as "openai" | "anthropic")}
+                      disabled={isSubmitting || !userId}
+                      className="sr-only"
+                    />
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <span className={`block text-sm font-semibold ${isActive ? "text-white" : "text-neutral-300"}`}>
+                          {option.title}
+                        </span>
+                        <span className={`mt-1 block text-xs ${isActive ? "text-blue-200" : "text-neutral-400"}`}>
+                          {option.subtitle}
+                        </span>
+                      </div>
+                      <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors ${
+                        isActive
+                          ? "border-blue-400 bg-blue-500"
+                          : "border-neutral-500 bg-transparent"
+                      }`}>
+                        {isActive && (
+                          <div className="h-2 w-2 rounded-full bg-white"></div>
+                        )}
+                      </div>
+                    </div>
+                  </label>
+                );
+              })}
             </div>
           </div>
 
@@ -84,9 +151,12 @@ export default function ResearchForm({
             <button
               type="submit"
               disabled={!topic.trim() || !userId || isSubmitting}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-neutral-600"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:bg-neutral-700"
             >
-              {isSubmitting ? "Submitting..." : "Start Research"}
+              {isSubmitting ? (
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent" />
+              ) : null}
+              {isSubmitting ? "Submitting" : "Start Research"}
             </button>
           </div>
         </form>

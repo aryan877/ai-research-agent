@@ -15,7 +15,7 @@ export const researchApi = {
   submitResearch: async (
     topic: string,
     userId: string,
-    provider: "openai" | "anthropic" = "anthropic"
+    provider: "openai" | "anthropic"
   ): Promise<ResearchRequest> => {
     const response = await api.post("/research", { topic, provider, userId });
     return response.data;

@@ -3,6 +3,7 @@ export interface ResearchRequest {
   id: string;
   topic: string;
   userId: string;
+  provider: "openai" | "anthropic";
   status: "pending" | "processing" | "completed" | "failed";
   createdAt: Date;
   updatedAt: Date;

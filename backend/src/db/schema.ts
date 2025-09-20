@@ -21,6 +21,9 @@ export const researchRequests = pgTable("research_requests", {
   id: uuid("id").defaultRandom().primaryKey(),
   topic: varchar("topic", { length: 255 }).notNull(),
   userId: uuid("user_id").notNull().defaultRandom(),
+  provider: varchar("provider", { length: 50 })
+    .notNull()
+    .default("anthropic"),
   status: varchar("status", { length: 20 })
     .notNull()
     .default("pending")

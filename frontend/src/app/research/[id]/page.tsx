@@ -3,17 +3,6 @@
 import { useUserId } from "@/hooks/useUserId";
 import { researchApi } from "@/lib/api";
 import { ResearchDetails } from "@/types";
-import {
-  ArrowLeft,
-  CheckCircle,
-  Clock,
-  ExternalLink,
-  Loader2,
-  ShieldCheck,
-  Sparkles,
-  Tag,
-  XCircle,
-} from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -93,16 +82,16 @@ export default function ResearchDetailPage() {
     };
   }, [id, userId]);
 
-  const getStepIcon = (status: string) => {
+  const getStepTone = (status: string) => {
     switch (status) {
       case "started":
-        return <Loader2 className="h-4 w-4 animate-spin text-blue-400" />;
+        return "bg-blue-400";
       case "completed":
-        return <CheckCircle className="h-4 w-4 text-green-400" />;
+        return "bg-green-400";
       case "failed":
-        return <XCircle className="h-4 w-4 text-red-400" />;
+        return "bg-red-400";
       default:
-        return <Clock className="h-4 w-4 text-neutral-500" />;
+        return "bg-neutral-500";
     }
   };
 
@@ -116,24 +105,24 @@ export default function ResearchDetailPage() {
   > = {
     completed: {
       label: "Completed",
-      badge: "bg-green-500/10 text-green-400",
+      badge: "bg-green-500/15 text-green-300",
       description:
         "Brief delivered. Review insights, citations, and guardrails below.",
     },
     processing: {
       label: "Processing",
-      badge: "bg-blue-500/10 text-blue-400",
+      badge: "bg-blue-500/15 text-blue-300",
       description:
         "Agents are synthesizing sources, scoring credibility, and drafting findings.",
     },
     pending: {
       label: "Pending",
-      badge: "bg-yellow-500/10 text-yellow-400",
+      badge: "bg-yellow-500/15 text-yellow-300",
       description: "Queued for validation. We'll begin sourcing momentarily.",
     },
     failed: {
       label: "Failed",
-      badge: "bg-red-500/10 text-red-400",
+      badge: "bg-red-500/15 text-red-300",
       description:
         "We hit a blocker. Inspect the workflow log for recovery options.",
     },
@@ -155,8 +144,10 @@ export default function ResearchDetailPage() {
   if (error || !details) {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-neutral-950 text-neutral-200">
-        <div className="relative z-10 rounded-xl bg-neutral-900 px-10 py-12 text-center">
-          <XCircle className="mx-auto h-12 w-12 text-red-400" />
+        <div className="relative z-10 rounded-2xl bg-neutral-900/90 px-10 py-12 text-center shadow-xl">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500/15 text-lg font-semibold text-red-300">
+            !
+          </div>
           <h2 className="mt-6 text-xl font-semibold text-white">
             Error loading research
           </h2>
@@ -180,8 +171,11 @@ export default function ResearchDetailPage() {
   const plan = enhancedData?.researchPlan;
   const metadata = enhancedData?.metadata;
   const theme = statusThemes[request.status];
+  const providerKey =
+    (metadata?.provider as "openai" | "anthropic" | undefined) ||
+    request.provider;
   const providerLabel =
-    metadata?.provider ?? request.provider ?? "system default";
+    providerKey === "openai" ? "OpenAI • GPT-4o" : "Anthropic • Claude";
   const createdAt = new Date(request.createdAt).toLocaleString();
   const processedAt = metadata?.processingTimestamp
     ? new Date(metadata.processingTimestamp).toLocaleString()
@@ -218,13 +212,13 @@ export default function ResearchDetailPage() {
   const timelineTone = (status: string) => {
     switch (status) {
       case "completed":
-        return "bg-green-500/10 text-green-400";
+        return "bg-green-500/20";
       case "failed":
-        return "bg-red-500/10 text-red-400";
+        return "bg-red-500/20";
       case "started":
-        return "bg-blue-500/10 text-blue-400";
+        return "bg-blue-500/20";
       default:
-        return "bg-neutral-800 text-neutral-400";
+        return "bg-neutral-800/80";
     }
   };
 
@@ -236,16 +230,16 @@ export default function ResearchDetailPage() {
             href="/"
             className="inline-flex items-center gap-2 text-sm font-medium text-neutral-400 transition hover:text-white"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-800">
-              <ArrowLeft className="h-4 w-4" />
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-800 text-base font-semibold text-white">
+              {"<"}
             </span>
             Back to dashboard
           </Link>
 
-          <header className="relative mt-6 overflow-hidden rounded-xl bg-neutral-900 p-10">
+          <header className="relative mt-6 overflow-hidden rounded-3xl bg-neutral-900/90 p-10 shadow-2xl">
             <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-3xl space-y-5">
-                <div className="inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-neutral-400">
+                <div className="inline-flex items-center gap-2 rounded-full bg-neutral-800/80 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-neutral-400">
                   Research brief
                 </div>
                 <h1 className="text-3xl font-semibold text-white sm:text-4xl">
@@ -253,25 +247,29 @@ export default function ResearchDetailPage() {
                 </h1>
                 <p className="text-sm text-neutral-300">{theme.description}</p>
                 <div className="flex flex-wrap gap-3 text-xs text-neutral-400">
-                  <span className="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1">
+                  <span className="rounded-full bg-neutral-800/80 px-3 py-1">
                     Created {createdAt}
                   </span>
-                  <span className="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1">
+                  <span className="rounded-full bg-neutral-800/80 px-3 py-1">
                     Provider {providerLabel}
                   </span>
-                  <span className="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1">
+                  <span className="rounded-full bg-neutral-800/80 px-3 py-1">
                     Request ID {request.id.slice(0, 8)}
                   </span>
                 </div>
               </div>
-              <div className="w-full max-w-xs rounded-xl bg-neutral-800 p-6">
+              <div className="w-full max-w-xs rounded-2xl bg-neutral-800/90 p-6 shadow-lg">
                 <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
                   Status
                 </p>
                 <span
-                  className={`mt-3 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${theme.badge}`}
+                  className={`mt-3 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${theme.badge} ${
+                    request.status === "processing" ? "animate-pulse" : ""
+                  }`}
                 >
-                  <span className="h-2 w-2 rounded-full bg-current" />
+                  <span className={`h-2 w-2 rounded-full bg-current ${
+                    request.status === "processing" ? "animate-ping" : ""
+                  }`} />
                   {theme.label}
                 </span>
                 {lastLog && (
@@ -319,12 +317,12 @@ export default function ResearchDetailPage() {
           <div className="mt-12 grid gap-10 xl:grid-cols-[1.2fr_0.85fr]">
             <div className="space-y-8">
               {summary && (
-                <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-8">
+                <div className="rounded-3xl bg-neutral-900/90 p-8 shadow-xl">
                   <div className="flex items-center justify-between gap-4">
                     <h2 className="text-2xl font-semibold text-white">
                       Executive summary
                     </h2>
-                    <span className="rounded-full bg-neutral-800 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.35em] text-neutral-500">
+                    <span className="rounded-full bg-neutral-800/80 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.35em] text-neutral-500">
                       {theme.label}
                     </span>
                   </div>
@@ -332,7 +330,7 @@ export default function ResearchDetailPage() {
                     {summary.executiveSummary}
                   </p>
                   {summary.sources.length > 0 && (
-                    <div className="mt-8 rounded-xl bg-neutral-800 p-5">
+                    <div className="mt-8 rounded-2xl bg-neutral-800/80 p-5">
                       <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
                         Top sources
                       </p>
@@ -340,17 +338,17 @@ export default function ResearchDetailPage() {
                         {summary.sources.map((source, index) => (
                           <div
                             key={`${source.title}-${index}`}
-                            className="flex flex-col gap-2 rounded-xl bg-neutral-900 p-4 sm:flex-row sm:items-center sm:justify-between"
+                            className="flex flex-col gap-2 rounded-2xl bg-neutral-900/80 p-4 sm:flex-row sm:items-center sm:justify-between"
                           >
                             <div>
                               <p className="text-sm font-semibold text-white">
                                 {source.title}
                               </p>
                               <div className="mt-1 flex flex-wrap gap-2 text-xs text-neutral-500">
-                                <span className="rounded-full bg-neutral-800 px-3 py-1">
+                                <span className="rounded-full bg-neutral-800/80 px-3 py-1">
                                   Relevance {source.relevance}
                                 </span>
-                                <span className="rounded-full bg-neutral-800 px-3 py-1">
+                                <span className="rounded-full bg-neutral-800/80 px-3 py-1">
                                   Credibility {source.credibility}
                                 </span>
                               </div>
@@ -364,7 +362,7 @@ export default function ResearchDetailPage() {
               )}
 
               {summary?.keyFindings?.length ? (
-                <div className="rounded-xl bg-neutral-900 p-8">
+                <div className="rounded-3xl bg-neutral-900/90 p-8 shadow-xl">
                   <h2 className="text-xl font-semibold text-white">
                     Key findings
                   </h2>
@@ -372,7 +370,7 @@ export default function ResearchDetailPage() {
                     {summary.keyFindings.map((finding, index) => (
                       <div
                         key={`finding-${index}`}
-                        className="rounded-xl bg-neutral-800 p-4"
+                        className="rounded-2xl bg-neutral-800/80 p-4"
                       >
                         <p className="text-sm text-neutral-300">{finding}</p>
                       </div>
@@ -382,7 +380,7 @@ export default function ResearchDetailPage() {
               ) : null}
 
               {summary?.recommendations?.length ? (
-                <div className="rounded-xl bg-neutral-900 p-8">
+                <div className="rounded-3xl bg-neutral-900/90 p-8 shadow-xl">
                   <h2 className="text-xl font-semibold text-white">
                     Recommendations
                   </h2>
@@ -390,7 +388,7 @@ export default function ResearchDetailPage() {
                     {summary.recommendations.map((recommendation, index) => (
                       <div
                         key={`recommendation-${index}`}
-                        className="rounded-xl bg-neutral-800 p-4"
+                        className="rounded-2xl bg-neutral-800/80 p-4"
                       >
                         <p className="text-sm text-neutral-300">
                           {recommendation}
@@ -402,7 +400,7 @@ export default function ResearchDetailPage() {
               ) : null}
 
               {result?.articles?.length ? (
-                <div className="rounded-xl bg-neutral-900 p-8">
+                <div className="rounded-3xl bg-neutral-900/90 p-8 shadow-xl">
                   <h2 className="text-xl font-semibold text-white">
                     Research articles
                   </h2>
@@ -410,13 +408,13 @@ export default function ResearchDetailPage() {
                     {result.articles.map((article, index) => (
                       <div
                         key={`${article.url}-${index}`}
-                        className="rounded-xl bg-neutral-800 p-6 transition hover:bg-neutral-700"
+                        className="rounded-2xl bg-neutral-800/80 p-6 transition hover:bg-neutral-700/70"
                       >
                         <div>
                           <h3 className="text-lg font-semibold text-white">
                             {article.title}
                           </h3>
-                          <span className="mt-2 inline-flex items-center rounded-full bg-neutral-900 px-3 py-1 text-xs text-neutral-400">
+                          <span className="mt-2 inline-flex items-center rounded-full bg-neutral-900/80 px-3 py-1 text-xs text-neutral-400">
                             {article.source}
                           </span>
                         </div>
@@ -425,10 +423,10 @@ export default function ResearchDetailPage() {
                             href={article.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 text-sm font-semibold text-blue-400 hover:text-blue-300"
+                            className="inline-flex items-center gap-1 text-sm font-semibold text-blue-300 hover:text-blue-200"
                           >
                             View article
-                            <ExternalLink className="h-4 w-4" />
+                            <span className="text-xs">-&gt;</span>
                           </a>
                         </div>
                         <p className="mt-4 text-sm leading-relaxed text-neutral-300">
@@ -438,19 +436,19 @@ export default function ResearchDetailPage() {
                           typeof article.credibilityScore === "number") && (
                           <div className="mt-4 flex flex-wrap gap-3 text-xs text-neutral-400">
                             {typeof article.relevanceScore === "number" && (
-                              <span className="rounded-full bg-neutral-900 px-3 py-1">
+                              <span className="rounded-full bg-neutral-900/80 px-3 py-1">
                                 Relevance {article.relevanceScore}/10
                               </span>
                             )}
                             {typeof article.credibilityScore === "number" && (
-                              <span className="rounded-full bg-neutral-900 px-3 py-1">
+                              <span className="rounded-full bg-neutral-900/80 px-3 py-1">
                                 Credibility {article.credibilityScore}/10
                               </span>
                             )}
                           </div>
                         )}
                         {article.keyInsights?.length ? (
-                          <div className="mt-4 rounded-xl bg-neutral-900 p-4">
+                          <div className="mt-4 rounded-2xl bg-neutral-900/80 p-4">
                             <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
                               Key insights
                             </p>
@@ -472,7 +470,7 @@ export default function ResearchDetailPage() {
 
             <aside className="space-y-8">
               {plan && (
-                <div className="rounded-xl bg-neutral-900 p-6">
+                <div className="rounded-3xl bg-neutral-900/90 p-6 shadow-xl">
                   <h2 className="text-xl font-semibold text-white">
                     Research plan
                   </h2>
@@ -482,7 +480,7 @@ export default function ResearchDetailPage() {
                         <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
                           Primary questions
                         </p>
-                        <ul className="mt-2 space-y-2 rounded-xl bg-neutral-800 p-4">
+                        <ul className="mt-2 space-y-2 rounded-2xl bg-neutral-800/80 p-4">
                           {plan.primaryQuestions.map((question, index) => (
                             <li key={`question-${index}`}>{question}</li>
                           ))}
@@ -498,7 +496,7 @@ export default function ResearchDetailPage() {
                           {plan.searchTerms.map((term, index) => (
                             <span
                               key={`term-${index}`}
-                              className="rounded-full bg-neutral-800 px-3 py-1 text-xs text-neutral-400"
+                              className="rounded-full bg-neutral-800/80 px-3 py-1 text-xs text-neutral-400"
                             >
                               {term}
                             </span>
@@ -511,7 +509,7 @@ export default function ResearchDetailPage() {
                         <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
                           Expected findings
                         </p>
-                        <ul className="mt-2 space-y-2 rounded-xl bg-neutral-800 p-4">
+                        <ul className="mt-2 space-y-2 rounded-2xl bg-neutral-800/80 p-4">
                           {plan.expectedFindings.map((finding, index) => (
                             <li key={`expected-${index}`}>{finding}</li>
                           ))}
@@ -523,7 +521,7 @@ export default function ResearchDetailPage() {
               )}
 
               {result?.keywords?.length ? (
-                <div className="rounded-xl bg-neutral-900 p-6">
+                <div className="rounded-3xl bg-neutral-900/90 p-6 shadow-xl">
                   <h2 className="flex items-center gap-2 text-xl font-semibold text-white">
                     Top keywords
                   </h2>
@@ -531,7 +529,7 @@ export default function ResearchDetailPage() {
                     {result.keywords.map((keyword, index) => (
                       <span
                         key={`keyword-${index}`}
-                        className="rounded-full bg-neutral-800 px-4 py-1.5 text-xs font-medium text-neutral-300"
+                        className="rounded-full bg-neutral-800/80 px-4 py-1.5 text-xs font-medium text-neutral-300"
                       >
                         {keyword}
                       </span>
@@ -543,9 +541,10 @@ export default function ResearchDetailPage() {
               {(metadata?.totalAnalyzed !== undefined ||
                 processedAt ||
                 summary) && (
-                <div className="rounded-xl bg-neutral-900 p-6">
+                <div className="rounded-3xl bg-neutral-900/90 p-6 shadow-xl">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-400">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-green-500/15">
+                      <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
@@ -580,9 +579,15 @@ export default function ResearchDetailPage() {
                 </div>
               )}
 
-              <div className="rounded-xl bg-neutral-900 p-6">
-                <h2 className="text-xl font-semibold text-white">
+              <div className="rounded-3xl bg-neutral-900/90 p-6 shadow-xl">
+                <h2 className="flex items-center gap-2 text-xl font-semibold text-white">
                   Workflow timeline
+                  {request.status === "processing" && (
+                    <span className="flex h-2 w-2">
+                      <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
+                    </span>
+                  )}
                 </h2>
                 <div className="mt-6 space-y-6">
                   {logs.map((log, index) => (
@@ -593,9 +598,17 @@ export default function ResearchDetailPage() {
                       <span
                         className={`absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full ${timelineTone(
                           log.status
-                        )}`}
+                        )} ${
+                          log.status === "started" && request.status === "processing" ? "animate-pulse" : ""
+                        }`}
                       >
-                        {getStepIcon(log.status)}
+                        <span
+                          className={`h-2 w-2 rounded-full ${getStepTone(
+                            log.status
+                          )} ${
+                            log.status === "started" && request.status === "processing" ? "animate-ping" : ""
+                          }`}
+                        />
                       </span>
                       <div>
                         <p className="text-sm font-semibold text-white">

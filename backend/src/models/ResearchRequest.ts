@@ -4,10 +4,14 @@ import { ResearchRequest } from "../types";
 import { db } from "../utils/database";
 
 export class ResearchRequestModel {
-  static async create(topic: string, userId: string): Promise<ResearchRequest> {
+  static async create(
+    topic: string,
+    userId: string,
+    provider: "openai" | "anthropic" = "anthropic"
+  ): Promise<ResearchRequest> {
     const [row] = await db
       .insert(researchRequests)
-      .values({ topic, userId })
+      .values({ topic, userId, provider })
       .returning();
     return this.mapRow(row);
   }
@@ -47,6 +51,8 @@ export class ResearchRequestModel {
       id: row.id,
       topic: row.topic,
       userId: row.userId,
+      provider:
+        (row.provider as "openai" | "anthropic" | null) ?? "anthropic",
       status: row.status,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

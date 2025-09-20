@@ -3,7 +3,7 @@ export interface ResearchRequest {
   id: string;
   topic: string;
   status: "pending" | "processing" | "completed" | "failed";
-  provider?: "openai" | "anthropic";
+  provider: "openai" | "anthropic";
   userId: string;
   createdAt: string;
   updatedAt: string;

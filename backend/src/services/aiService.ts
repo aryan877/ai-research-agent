@@ -26,12 +26,15 @@ const ArticleAnalysisSchema = z.object({
   relevanceScore: z.number().min(0).max(10),
   mainTopics: z.array(z.string()).max(5),
   summary: boundedString(500),
-  keyInsights: z.array(z.string()).max(3),
+  keyInsights: z.array(z.string()).max(5),
   credibilityScore: z.number().min(0).max(10),
 });
 
 const boundedStringList = (limit: number) =>
-  z.array(z.string().min(1)).min(1).max(Math.max(limit * 3, limit + 5));
+  z
+    .array(z.string().min(1))
+    .min(1)
+    .max(Math.max(limit * 3, limit + 5));
 
 const ResearchPlanSchema = z.object({
   primaryQuestions: boundedStringList(5),
@@ -49,8 +52,8 @@ const ResearchSummarySchema = z.object({
     .array(
       z.object({
         title: z.string(),
-        relevance: z.string(),
-        credibility: z.string(),
+        relevance: z.string().catch("Relevance not provided"),
+        credibility: z.string().catch("Credibility not provided"),
       })
     )
     .max(5),
@@ -184,6 +187,8 @@ Evaluate:
 - Key insights extracted
 - Credibility based on source and content (0-10)
 - Create a concise summary (maximum 500 characters)
+
+Return no more than 5 key insights and keep each insight concise.
 
 Be thorough and critical in your analysis.`,
           experimental_telemetry: {
@@ -346,7 +351,7 @@ Generate:
 - Key findings that answer the main questions about this topic
 - Actionable recommendations based on the research
 - A confidence level in the completeness of this research (0-10)
-- Source information highlighting the most valuable sources
+- Source information highlighting the most valuable sources, including both their relevance and a short credibility note
 
 Be analytical, well-structured, and evidence-based in your summary.`,
       experimental_telemetry: {
@@ -380,7 +385,33 @@ Be analytical, well-structured, and evidence-based in your summary.`,
       });
     }
 
-    return result.object as ResearchSummary;
+    const summary = result.object as ResearchSummary;
+
+    const trimList = (items: string[]) =>
+      items.map((item) => item.trim()).filter((item) => item.length > 0);
+
+    return {
+      ...summary,
+      executiveSummary: summary.executiveSummary.trim(),
+      keyFindings: trimList(summary.keyFindings),
+      recommendations: trimList(summary.recommendations),
+      sources: summary.sources.map((source) => {
+        const relevance = source.relevance?.trim();
+        const credibility = source.credibility?.trim();
+
+        return {
+          title: source.title.trim(),
+          relevance:
+            relevance && relevance.length > 0
+              ? relevance
+              : "Relevance not provided",
+          credibility:
+            credibility && credibility.length > 0
+              ? credibility
+              : "Credibility not provided",
+        };
+      }),
+    };
   }
 
   /**
