@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
-import aiRoutes from "./routes/ai";
 import metricsRoutes from "./routes/metrics";
 import researchRoutes from "./routes/research";
 import { db } from "./utils/database";
@@ -27,7 +26,6 @@ app.use(morgan("combined"));
 app.use(express.json());
 
 app.use("/api/research", researchRoutes);
-app.use("/api/ai", aiRoutes);
 app.use("/api/metrics", metricsRoutes);
 
 app.get("/health", (_req, res) => {

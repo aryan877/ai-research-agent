@@ -116,24 +116,24 @@ export default function ResearchDetailPage() {
   > = {
     completed: {
       label: "Completed",
-      badge: "border-green-600 bg-green-500/10 text-green-400",
+      badge: "bg-green-500/10 text-green-400",
       description:
         "Brief delivered. Review insights, citations, and guardrails below.",
     },
     processing: {
       label: "Processing",
-      badge: "border-blue-600 bg-blue-500/10 text-blue-400",
+      badge: "bg-blue-500/10 text-blue-400",
       description:
         "Agents are synthesizing sources, scoring credibility, and drafting findings.",
     },
     pending: {
       label: "Pending",
-      badge: "border-yellow-600 bg-yellow-500/10 text-yellow-400",
+      badge: "bg-yellow-500/10 text-yellow-400",
       description: "Queued for validation. We'll begin sourcing momentarily.",
     },
     failed: {
       label: "Failed",
-      badge: "border-red-600 bg-red-500/10 text-red-400",
+      badge: "bg-red-500/10 text-red-400",
       description:
         "We hit a blocker. Inspect the workflow log for recovery options.",
     },
@@ -142,7 +142,7 @@ export default function ResearchDetailPage() {
   if (loading) {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-neutral-950 text-neutral-200">
-        <div className="relative z-10 rounded-xl border border-neutral-700 bg-neutral-900 px-10 py-12 text-center">
+        <div className="relative z-10 rounded-xl bg-neutral-900 px-10 py-12 text-center">
           <div className="mx-auto h-12 w-12 animate-spin rounded-full border-2 border-neutral-500 border-t-transparent" />
           <p className="mt-4 text-sm text-neutral-400">
             Loading research details...
@@ -155,7 +155,7 @@ export default function ResearchDetailPage() {
   if (error || !details) {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-neutral-950 text-neutral-200">
-        <div className="relative z-10 rounded-xl border border-red-600 bg-neutral-900 px-10 py-12 text-center">
+        <div className="relative z-10 rounded-xl bg-neutral-900 px-10 py-12 text-center">
           <XCircle className="mx-auto h-12 w-12 text-red-400" />
           <h2 className="mt-6 text-xl font-semibold text-white">
             Error loading research
@@ -218,13 +218,13 @@ export default function ResearchDetailPage() {
   const timelineTone = (status: string) => {
     switch (status) {
       case "completed":
-        return "border-green-600 bg-green-500/10 text-green-400";
+        return "bg-green-500/10 text-green-400";
       case "failed":
-        return "border-red-600 bg-red-500/10 text-red-400";
+        return "bg-red-500/10 text-red-400";
       case "started":
-        return "border-blue-600 bg-blue-500/10 text-blue-400";
+        return "bg-blue-500/10 text-blue-400";
       default:
-        return "border-neutral-700 bg-neutral-800 text-neutral-400";
+        return "bg-neutral-800 text-neutral-400";
     }
   };
 
@@ -236,17 +236,16 @@ export default function ResearchDetailPage() {
             href="/"
             className="inline-flex items-center gap-2 text-sm font-medium text-neutral-400 transition hover:text-white"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-700 bg-neutral-800">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-800">
               <ArrowLeft className="h-4 w-4" />
             </span>
             Back to dashboard
           </Link>
 
-          <header className="relative mt-6 overflow-hidden rounded-xl border border-neutral-700 bg-neutral-900 p-10">
+          <header className="relative mt-6 overflow-hidden rounded-xl bg-neutral-900 p-10">
             <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-3xl space-y-5">
-                <div className="inline-flex items-center gap-2 rounded-full border border-neutral-700 bg-neutral-800 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-neutral-400">
-                  <Sparkles className="h-3.5 w-3.5 text-blue-400" />
+                <div className="inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-neutral-400">
                   Research brief
                 </div>
                 <h1 className="text-3xl font-semibold text-white sm:text-4xl">
@@ -265,12 +264,12 @@ export default function ResearchDetailPage() {
                   </span>
                 </div>
               </div>
-              <div className="w-full max-w-xs rounded-xl border border-neutral-700 bg-neutral-800 p-6">
+              <div className="w-full max-w-xs rounded-xl bg-neutral-800 p-6">
                 <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
                   Status
                 </p>
                 <span
-                  className={`mt-3 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${theme.badge}`}
+                  className={`mt-3 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${theme.badge}`}
                 >
                   <span className="h-2 w-2 rounded-full bg-current" />
                   {theme.label}
@@ -281,12 +280,12 @@ export default function ResearchDetailPage() {
                   </p>
                 )}
                 {summary && (
-                  <div className="mt-4 rounded-xl border border-green-600 bg-green-500/10 px-4 py-3 text-sm text-green-400">
+                  <div className="mt-4 rounded-xl bg-green-500/10 px-4 py-3 text-sm text-green-400">
                     Confidence {summary.confidenceLevel}/10
                   </div>
                 )}
                 {metadata?.totalAnalyzed !== undefined && (
-                  <div className="mt-3 rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-3 text-xs text-neutral-400">
+                  <div className="mt-3 rounded-xl bg-neutral-900 px-4 py-3 text-xs text-neutral-400">
                     {metadata.totalAnalyzed} sources processed
                   </div>
                 )}
@@ -299,7 +298,7 @@ export default function ResearchDetailPage() {
               {metrics.map((metric) => (
                 <div
                   key={metric.label}
-                  className="rounded-xl border border-neutral-700 bg-neutral-900 p-5"
+                  className="rounded-xl bg-neutral-900 p-5"
                 >
                   <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
                     {metric.label}
@@ -325,7 +324,7 @@ export default function ResearchDetailPage() {
                     <h2 className="text-2xl font-semibold text-white">
                       Executive summary
                     </h2>
-                    <span className="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.35em] text-neutral-500">
+                    <span className="rounded-full bg-neutral-800 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.35em] text-neutral-500">
                       {theme.label}
                     </span>
                   </div>
@@ -333,7 +332,7 @@ export default function ResearchDetailPage() {
                     {summary.executiveSummary}
                   </p>
                   {summary.sources.length > 0 && (
-                    <div className="mt-8 rounded-xl border border-neutral-700 bg-neutral-800 p-5">
+                    <div className="mt-8 rounded-xl bg-neutral-800 p-5">
                       <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
                         Top sources
                       </p>
@@ -341,17 +340,17 @@ export default function ResearchDetailPage() {
                         {summary.sources.map((source, index) => (
                           <div
                             key={`${source.title}-${index}`}
-                            className="flex flex-col gap-2 rounded-xl border border-neutral-700 bg-neutral-900 p-4 sm:flex-row sm:items-center sm:justify-between"
+                            className="flex flex-col gap-2 rounded-xl bg-neutral-900 p-4 sm:flex-row sm:items-center sm:justify-between"
                           >
                             <div>
                               <p className="text-sm font-semibold text-white">
                                 {source.title}
                               </p>
                               <div className="mt-1 flex flex-wrap gap-2 text-xs text-neutral-500">
-                                <span className="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1">
+                                <span className="rounded-full bg-neutral-800 px-3 py-1">
                                   Relevance {source.relevance}
                                 </span>
-                                <span className="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1">
+                                <span className="rounded-full bg-neutral-800 px-3 py-1">
                                   Credibility {source.credibility}
                                 </span>
                               </div>
@@ -365,7 +364,7 @@ export default function ResearchDetailPage() {
               )}
 
               {summary?.keyFindings?.length ? (
-                <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-8">
+                <div className="rounded-xl bg-neutral-900 p-8">
                   <h2 className="text-xl font-semibold text-white">
                     Key findings
                   </h2>
@@ -373,9 +372,8 @@ export default function ResearchDetailPage() {
                     {summary.keyFindings.map((finding, index) => (
                       <div
                         key={`finding-${index}`}
-                        className="flex gap-4 rounded-xl border border-neutral-700 bg-neutral-800 p-4"
+                        className="rounded-xl bg-neutral-800 p-4"
                       >
-                        <span className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-blue-400" />
                         <p className="text-sm text-neutral-300">{finding}</p>
                       </div>
                     ))}
@@ -384,7 +382,7 @@ export default function ResearchDetailPage() {
               ) : null}
 
               {summary?.recommendations?.length ? (
-                <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-8">
+                <div className="rounded-xl bg-neutral-900 p-8">
                   <h2 className="text-xl font-semibold text-white">
                     Recommendations
                   </h2>
@@ -392,9 +390,8 @@ export default function ResearchDetailPage() {
                     {summary.recommendations.map((recommendation, index) => (
                       <div
                         key={`recommendation-${index}`}
-                        className="flex gap-4 rounded-xl border border-neutral-700 bg-neutral-800 p-4"
+                        className="rounded-xl bg-neutral-800 p-4"
                       >
-                        <span className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-green-400" />
                         <p className="text-sm text-neutral-300">
                           {recommendation}
                         </p>
@@ -405,7 +402,7 @@ export default function ResearchDetailPage() {
               ) : null}
 
               {result?.articles?.length ? (
-                <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-8">
+                <div className="rounded-xl bg-neutral-900 p-8">
                   <h2 className="text-xl font-semibold text-white">
                     Research articles
                   </h2>
@@ -413,17 +410,17 @@ export default function ResearchDetailPage() {
                     {result.articles.map((article, index) => (
                       <div
                         key={`${article.url}-${index}`}
-                        className="rounded-xl border border-neutral-700 bg-neutral-800 p-6 transition hover:border-neutral-600 hover:bg-neutral-700"
+                        className="rounded-xl bg-neutral-800 p-6 transition hover:bg-neutral-700"
                       >
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
-                            <h3 className="text-lg font-semibold text-white">
-                              {article.title}
-                            </h3>
-                            <span className="mt-2 inline-flex items-center rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1 text-xs text-neutral-400">
-                              {article.source}
-                            </span>
-                          </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-white">
+                            {article.title}
+                          </h3>
+                          <span className="mt-2 inline-flex items-center rounded-full bg-neutral-900 px-3 py-1 text-xs text-neutral-400">
+                            {article.source}
+                          </span>
+                        </div>
+                        <div className="mt-3">
                           <a
                             href={article.url}
                             target="_blank"
@@ -441,19 +438,19 @@ export default function ResearchDetailPage() {
                           typeof article.credibilityScore === "number") && (
                           <div className="mt-4 flex flex-wrap gap-3 text-xs text-neutral-400">
                             {typeof article.relevanceScore === "number" && (
-                              <span className="rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1">
+                              <span className="rounded-full bg-neutral-900 px-3 py-1">
                                 Relevance {article.relevanceScore}/10
                               </span>
                             )}
                             {typeof article.credibilityScore === "number" && (
-                              <span className="rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1">
+                              <span className="rounded-full bg-neutral-900 px-3 py-1">
                                 Credibility {article.credibilityScore}/10
                               </span>
                             )}
                           </div>
                         )}
                         {article.keyInsights?.length ? (
-                          <div className="mt-4 rounded-xl border border-neutral-700 bg-neutral-900 p-4">
+                          <div className="mt-4 rounded-xl bg-neutral-900 p-4">
                             <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
                               Key insights
                             </p>
@@ -475,7 +472,7 @@ export default function ResearchDetailPage() {
 
             <aside className="space-y-8">
               {plan && (
-                <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-6">
+                <div className="rounded-xl bg-neutral-900 p-6">
                   <h2 className="text-xl font-semibold text-white">
                     Research plan
                   </h2>
@@ -485,7 +482,7 @@ export default function ResearchDetailPage() {
                         <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
                           Primary questions
                         </p>
-                        <ul className="mt-2 space-y-2 rounded-xl border border-neutral-700 bg-neutral-800 p-4">
+                        <ul className="mt-2 space-y-2 rounded-xl bg-neutral-800 p-4">
                           {plan.primaryQuestions.map((question, index) => (
                             <li key={`question-${index}`}>{question}</li>
                           ))}
@@ -501,7 +498,7 @@ export default function ResearchDetailPage() {
                           {plan.searchTerms.map((term, index) => (
                             <span
                               key={`term-${index}`}
-                              className="rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1 text-xs text-neutral-400"
+                              className="rounded-full bg-neutral-800 px-3 py-1 text-xs text-neutral-400"
                             >
                               {term}
                             </span>
@@ -514,7 +511,7 @@ export default function ResearchDetailPage() {
                         <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
                           Expected findings
                         </p>
-                        <ul className="mt-2 space-y-2 rounded-xl border border-neutral-700 bg-neutral-800 p-4">
+                        <ul className="mt-2 space-y-2 rounded-xl bg-neutral-800 p-4">
                           {plan.expectedFindings.map((finding, index) => (
                             <li key={`expected-${index}`}>{finding}</li>
                           ))}
@@ -526,16 +523,15 @@ export default function ResearchDetailPage() {
               )}
 
               {result?.keywords?.length ? (
-                <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-6">
+                <div className="rounded-xl bg-neutral-900 p-6">
                   <h2 className="flex items-center gap-2 text-xl font-semibold text-white">
-                    <Tag className="h-5 w-5 text-blue-400" />
                     Top keywords
                   </h2>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {result.keywords.map((keyword, index) => (
                       <span
                         key={`keyword-${index}`}
-                        className="rounded-full border border-neutral-700 bg-neutral-800 px-4 py-1.5 text-xs font-medium text-neutral-300"
+                        className="rounded-full bg-neutral-800 px-4 py-1.5 text-xs font-medium text-neutral-300"
                       >
                         {keyword}
                       </span>
@@ -547,10 +543,9 @@ export default function ResearchDetailPage() {
               {(metadata?.totalAnalyzed !== undefined ||
                 processedAt ||
                 summary) && (
-                <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-6">
+                <div className="rounded-xl bg-neutral-900 p-6">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-400">
-                      <ShieldCheck className="h-5 w-5" />
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
@@ -563,24 +558,21 @@ export default function ResearchDetailPage() {
                   </div>
                   <ul className="mt-4 space-y-3 text-sm text-neutral-300">
                     {metadata?.totalAnalyzed !== undefined && (
-                      <li className="flex gap-3">
-                        <span className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-green-400" />
+                      <li>
                         <span>
                           {metadata.totalAnalyzed} distinct articles evaluated
                         </span>
                       </li>
                     )}
                     {summary && (
-                      <li className="flex gap-3">
-                        <span className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-green-400" />
+                      <li>
                         <span>
                           Confidence scoring: {summary.confidenceLevel}/10
                         </span>
                       </li>
                     )}
                     {processedAt && (
-                      <li className="flex gap-3">
-                        <span className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-green-400" />
+                      <li>
                         <span>Processing completed {processedAt}</span>
                       </li>
                     )}
@@ -588,7 +580,7 @@ export default function ResearchDetailPage() {
                 </div>
               )}
 
-              <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-6">
+              <div className="rounded-xl bg-neutral-900 p-6">
                 <h2 className="text-xl font-semibold text-white">
                   Workflow timeline
                 </h2>
@@ -599,7 +591,7 @@ export default function ResearchDetailPage() {
                         <span className="absolute left-[11px] top-6 h-full w-0.5 bg-neutral-700" />
                       )}
                       <span
-                        className={`absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full border ${timelineTone(
+                        className={`absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full ${timelineTone(
                           log.status
                         )}`}
                       >
