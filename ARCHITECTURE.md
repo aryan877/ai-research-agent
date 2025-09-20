@@ -9,15 +9,15 @@
 ## High-Level Diagram
 ```mermaid
 graph TD
-    Browser[Browser\nNext.js App] -->|submit topic + userId| API[/Express REST API/]
-    API -->|persist request| DB[(PostgreSQL)]
-    API -->|enqueue job| Queue[(Redis/Bull)]
-    Queue --> Worker[Background Worker\n(researchJob)]
-    Worker -->|fetch articles| Sources[(NewsAPI, HackerNews, Wikipedia)]
-    Worker -->|summaries & plans| AI[(Anthropic / OpenAI)]
-    Worker -->|store results + logs| DB
-    DB -->|filtered by userId| API
-    API -->|poll request + results| Browser
+    Browser["Browser<br/>Next.js App"] -->|"submit topic + userId"| API["/Express REST API/"]
+    API -->|"persist request"| DB[("PostgreSQL")]
+    API -->|"enqueue job"| Queue[("Redis/Bull")]
+    Queue --> Worker["Background Worker<br/>(researchJob)"]
+    Worker -->|"fetch articles"| Sources[("NewsAPI, HackerNews, Wikipedia")]
+    Worker -->|"summaries & plans"| AI[("Anthropic / OpenAI")]
+    Worker -->|"store results + logs"| DB
+    DB -->|"filtered by userId"| API
+    API -->|"poll request + results"| Browser
 ```
 
 ## Request Lifecycle
