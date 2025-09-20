@@ -9,34 +9,59 @@ A full-stack application that automates research workflows by accepting a topic 
 - Background processing with Bull.js and Redis
 - Real-time progress tracking
 - Responsive UI with Next.js and Tailwind CSS
-- Full Docker containerization
+- Production-ready Docker containerization
+- CI/CD pipeline with GitHub Actions
+
+## Architecture
+
+- **Frontend**: Next.js deployed on Vercel
+- **Backend**: Node.js/Express API with PostgreSQL & Redis
+- **Deployment**: Backend on VPS (Hetzner) with Caddy reverse proxy
+- **Domain**: `deepresearching.xyz` (frontend) + `api.deepresearching.xyz` (backend)
 
 ## Quick Start
 
 ### Prerequisites
 
 - Docker & Docker Compose
+- Node.js 20+ (for local development)
 - Git
 
 ### Local Development
 
-1. Clone the repository
-2. Copy environment files:
+1. **Clone and setup environment:**
    ```bash
-   cp backend/.env.example backend/.env
-   cp frontend/.env.example frontend/.env.local
+   git clone <repository-url>
+   cd ai-research-agent
+
+   # Copy environment templates
+   cp .env.example .env
+   # Edit .env with your database credentials
+
+   # Setup backend environment
+   cd backend
+   cp .env.example .env
+   # Add your API keys to backend/.env
    ```
-3. Start with Docker:
+
+2. **Start services:**
    ```bash
-   docker-compose up --build -d
+   # Development (includes frontend)
+   docker compose up --build -d
+
+   # Production (backend only)
+   docker compose -f docker-compose.prod.yml up --build -d
    ```
-4. Run database migrations:
+
+3. **Run database migrations:**
    ```bash
-   docker-compose exec backend npm run db:migrate
+   docker compose exec backend npm run db:migrate
    ```
-5. Access the application:
+
+4. **Access the application:**
    - Frontend: http://localhost:3000
    - Backend: http://localhost:3001
+   - Health check: http://localhost:3001/health
 
 ### Database Management
 
@@ -44,71 +69,154 @@ When you modify the database schema in `backend/src/db/schema.ts`:
 
 ```bash
 # Generate and run migration
-docker-compose exec backend npm run db:generate
-docker-compose exec backend npm run db:migrate
+docker compose exec backend npm run db:generate
+docker compose exec backend npm run db:migrate
 ```
 
 ## API Endpoints
 
+- `GET /health` - Health check
 - `POST /api/research` - Submit research topic
 - `GET /api/research` - List all requests
 - `GET /api/research/:id` - Get detailed results with logs
+- `GET /api/metrics` - Application metrics
 
 ## Research Workflow
 
 5-step automated process:
 
-1. Input Parsing - Validates and stores topic
-2. Data Gathering - Fetches articles from external APIs
-3. Processing - Extracts top 5 articles and keywords
-4. Result Persistence - Saves to database
-5. Return Results - Provides structured output with logs
+1. **Input Parsing** - Validates and stores topic
+2. **Data Gathering** - Fetches articles from external APIs
+3. **Processing** - Extracts top 5 articles and keywords
+4. **Result Persistence** - Saves to database
+5. **Return Results** - Provides structured output with logs
 
 ## Deployment
 
-### Docker (Full Stack)
+### Production Setup (Recommended)
 
-Both frontend and backend run in Docker containers:
+**Frontend → Vercel | Backend → VPS**
 
-1. **VPS Setup**
+#### 1. VPS Setup (Hetzner/DigitalOcean)
 
-   ```bash
-   # Install Docker
-   sudo apt update && sudo apt install docker.io docker-compose
+```bash
+# Install dependencies
+apt update && apt upgrade -y
+curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
+apt install docker-compose-plugin caddy git -y
 
-   # Clone and deploy
-   git clone <repository-url>
-   cd ai-research-agent
-   cp backend/.env.example backend/.env
-   cp frontend/.env.example frontend/.env.local
-   docker-compose up -d --build
-   ```
+# Setup application
+mkdir -p /app && cd /app
+git clone <repository-url> ai-research-agent
+cd ai-research-agent
 
-2. **Cloud Platforms**
-   - Backend: Deploy to Render, Railway, or Fly.io
-   - Database: Use managed PostgreSQL and Redis services
-   - Frontend: Can be deployed alongside backend in Docker
+# Environment setup
+cp .env.example .env
+cp backend/.env.example backend/.env
+# Edit both .env files with production values
+```
+
+#### 2. Caddy Configuration
+
+```bash
+nano /etc/caddy/Caddyfile
+```
+
+```caddy
+api.deepresearching.xyz {
+    reverse_proxy localhost:3001
+}
+```
+
+```bash
+systemctl enable caddy && systemctl start caddy
+```
+
+#### 3. Deploy Backend
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+#### 4. Frontend (Vercel)
+
+1. Connect GitHub repo to Vercel
+2. Set environment variable: `NEXT_PUBLIC_API_URL=https://api.deepresearching.xyz/api`
+3. Deploy automatically
+
+#### 5. DNS Setup (Cloudflare)
+
+```
+A    api    YOUR_VPS_IP    (Proxied)
+CNAME @     cname.vercel-dns.com (DNS Only)
+CNAME www   cname.vercel-dns.com (DNS Only)
+```
+
+### GitHub Actions Setup
+
+Add these secrets to your GitHub repository:
+
+```
+VPS_HOST=your-server-ip
+VPS_USER=root
+VPS_SSH_KEY=<your-private-ssh-key>
+```
+
+Auto-deployment on push to main branch.
 
 ## Technology Stack
 
-**Backend:** Node.js, TypeScript, Express.js, PostgreSQL, Redis, Bull.js
-**Frontend:** Next.js, TypeScript, Tailwind CSS
-**DevOps:** Docker, GitHub Actions
+- **Backend**: Node.js, TypeScript, Express.js, PostgreSQL, Redis, Bull.js, Drizzle ORM
+- **Frontend**: Next.js 15, TypeScript, Tailwind CSS, React 19
+- **Infrastructure**: Docker, Caddy, GitHub Actions
+- **Deployment**: Vercel (Frontend), VPS (Backend), Cloudflare (DNS)
 
 ## Environment Variables
 
-**Backend (.env):**
-
+### Root `.env` (Docker Compose)
 ```env
-NODE_ENV=development
-PORT=3001
-DATABASE_URL=postgresql://postgres:password@localhost:5432/ai_research_agent
-REDIS_URL=redis://localhost:6379
-NEWS_API_KEY=optional_news_api_key
+# Database Configuration
+POSTGRES_DB=ai_research_agent
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_secure_password
+
+# Global Configuration
+NODE_ENV=production
 ```
 
-**Frontend (.env.local):**
-
+### Backend `.env` (Application)
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:3001/api
+# Application
+PORT=3001
+
+# External APIs
+NEWS_API_KEY=your_news_api_key
+
+# AI Providers (Optional)
+OPENAI_API_KEY=your_openai_key
+ANTHROPIC_API_KEY=your_anthropic_key
+```
+
+### Vercel Environment
+```env
+NEXT_PUBLIC_API_URL=https://api.deepresearching.xyz/api
+```
+
+## Commands
+
+```bash
+# Development
+docker compose up --build -d
+
+# Production (backend only)
+docker compose -f docker-compose.prod.yml up --build -d
+
+# Database migrations
+docker compose exec backend npm run db:migrate
+
+# View logs
+docker compose logs -f backend
+
+# Stop services
+docker compose down
 ```

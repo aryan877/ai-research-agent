@@ -51,6 +51,6 @@ jobs:
           ssh $VPS_USER@$VPS_HOST "
             cd /app/ai-research-agent &&
             git pull origin main &&
-            docker-compose down backend &&
-            docker-compose up -d --build backend postgres redis
+            docker compose -f docker-compose.prod.yml down &&
+            docker compose -f docker-compose.prod.yml up -d --build
           "

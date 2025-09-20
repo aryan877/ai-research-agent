@@ -2,6 +2,7 @@
 export interface ResearchRequest {
   id: string;
   topic: string;
+  userId: string;
   status: "pending" | "processing" | "completed" | "failed";
   createdAt: Date;
   updatedAt: Date;

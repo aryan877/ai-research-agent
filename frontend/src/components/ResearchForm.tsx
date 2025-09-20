@@ -6,11 +6,13 @@ import { useState } from "react";
 
 interface ResearchFormProps {
   onSubmit: () => void;
+  userId: string | null;
   className?: string;
 }
 
 export default function ResearchForm({
   onSubmit,
+  userId,
   className,
 }: ResearchFormProps) {
   const [topic, setTopic] = useState("");
@@ -21,12 +23,16 @@ export default function ResearchForm({
     event.preventDefault();
     const trimmedTopic = topic.trim();
     if (!trimmedTopic) return;
+    if (!userId) {
+      setError("User session is still initializing. Please try again in a moment.");
+      return;
+    }
 
     setIsSubmitting(true);
     setError("");
 
     try {
-      await researchApi.submitResearch(trimmedTopic, "anthropic");
+      await researchApi.submitResearch(trimmedTopic, userId);
       setTopic("");
       onSubmit();
     } catch (submissionError) {
@@ -56,11 +62,11 @@ export default function ResearchForm({
                 onChange={(event) => setTopic(event.target.value)}
                 placeholder="Enter your research topic..."
                 className="w-full rounded-md border border-neutral-600 bg-neutral-800 px-3 py-2 pr-12 text-sm text-white placeholder-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !userId}
               />
               <button
                 type="submit"
-                disabled={!topic.trim() || isSubmitting}
+                disabled={!topic.trim() || !userId || isSubmitting}
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-blue-600 p-2 text-white hover:bg-blue-700 disabled:bg-neutral-600"
               >
                 {isSubmitting ? (
@@ -77,7 +83,7 @@ export default function ResearchForm({
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={!topic.trim() || isSubmitting}
+              disabled={!topic.trim() || !userId || isSubmitting}
               className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-neutral-600"
             >
               {isSubmitting ? "Submitting..." : "Start Research"}

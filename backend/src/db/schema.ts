@@ -20,6 +20,7 @@ type WorkflowStatus = WorkflowLog["status"];
 export const researchRequests = pgTable("research_requests", {
   id: uuid("id").defaultRandom().primaryKey(),
   topic: varchar("topic", { length: 255 }).notNull(),
+  userId: uuid("user_id").notNull().defaultRandom(),
   status: varchar("status", { length: 20 })
     .notNull()
     .default("pending")

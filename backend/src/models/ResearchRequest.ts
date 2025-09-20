@@ -4,10 +4,10 @@ import { ResearchRequest } from "../types";
 import { db } from "../utils/database";
 
 export class ResearchRequestModel {
-  static async create(topic: string): Promise<ResearchRequest> {
+  static async create(topic: string, userId: string): Promise<ResearchRequest> {
     const [row] = await db
       .insert(researchRequests)
-      .values({ topic })
+      .values({ topic, userId })
       .returning();
     return this.mapRow(row);
   }
@@ -22,10 +22,11 @@ export class ResearchRequestModel {
     return row ? this.mapRow(row) : null;
   }
 
-  static async findAll(): Promise<ResearchRequest[]> {
+  static async findAllByUser(userId: string): Promise<ResearchRequest[]> {
     const rows = await db
       .select()
       .from(researchRequests)
+      .where(eq(researchRequests.userId, userId))
       .orderBy(desc(researchRequests.createdAt));
 
     return rows.map(this.mapRow);
@@ -45,6 +46,7 @@ export class ResearchRequestModel {
     return {
       id: row.id,
       topic: row.topic,
+      userId: row.userId,
       status: row.status,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

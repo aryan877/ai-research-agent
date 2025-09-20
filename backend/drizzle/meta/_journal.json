@@ -8,6 +8,13 @@
       "when": 1758292590214,
       "tag": "0000_left_luckman",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1758348809570,
+      "tag": "0001_add_user_scope_to_requests",
+      "breakpoints": true
     }
   ]
 }

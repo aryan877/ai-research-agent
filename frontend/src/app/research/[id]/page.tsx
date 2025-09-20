@@ -1,5 +1,6 @@
 "use client";
 
+import { useUserId } from "@/hooks/useUserId";
 import { researchApi } from "@/lib/api";
 import { ResearchDetails } from "@/types";
 import {
@@ -23,11 +24,12 @@ export default function ResearchDetailPage() {
   const [details, setDetails] = useState<ResearchDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const userId = useUserId();
 
   const id = params.id as string;
 
   useEffect(() => {
-    if (!id) {
+    if (!id || !userId) {
       return;
     }
 
@@ -48,7 +50,7 @@ export default function ResearchDetailPage() {
       }
 
       try {
-        const data = await researchApi.getResearchById(id);
+        const data = await researchApi.getResearchById(id, userId);
 
         if (!isMounted) {
           return;
@@ -89,7 +91,7 @@ export default function ResearchDetailPage() {
         clearInterval(intervalId);
       }
     };
-  }, [id]);
+  }, [id, userId]);
 
   const getStepIcon = (status: string) => {
     switch (status) {

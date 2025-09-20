@@ -4,6 +4,7 @@ export interface ResearchRequest {
   topic: string;
   status: "pending" | "processing" | "completed" | "failed";
   provider?: "openai" | "anthropic";
+  userId: string;
   createdAt: string;
   updatedAt: string;
 }

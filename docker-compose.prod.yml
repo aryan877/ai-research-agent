@@ -38,30 +38,15 @@ services:
     env_file:
       - ./backend/.env
     environment:
+      # Override specific vars for production
+      NODE_ENV: production
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/ai_research_agent
       REDIS_URL: redis://redis:6379
-      NODE_ENV: ${NODE_ENV}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    restart: unless-stopped
-    networks:
-      - app-network
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
-    depends_on:
-      backend:
-        condition: service_started
     restart: unless-stopped
     networks:
       - app-network

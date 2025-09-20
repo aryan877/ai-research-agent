@@ -14,19 +14,23 @@ const api = axios.create({
 export const researchApi = {
   submitResearch: async (
     topic: string,
-    provider?: "openai" | "anthropic"
+    userId: string,
+    provider: "openai" | "anthropic" = "anthropic"
   ): Promise<ResearchRequest> => {
-    const response = await api.post("/research", { topic, provider });
+    const response = await api.post("/research", { topic, provider, userId });
     return response.data;
   },
 
-  getAllResearch: async (): Promise<ResearchRequest[]> => {
-    const response = await api.get("/research");
+  getAllResearch: async (userId: string): Promise<ResearchRequest[]> => {
+    const response = await api.get("/research", { params: { userId } });
     return response.data;
   },
 
-  getResearchById: async (id: string): Promise<ResearchDetails> => {
-    const response = await api.get(`/research/${id}`);
+  getResearchById: async (
+    id: string,
+    userId: string
+  ): Promise<ResearchDetails> => {
+    const response = await api.get(`/research/${id}`, { params: { userId } });
     return response.data;
   },
 };
